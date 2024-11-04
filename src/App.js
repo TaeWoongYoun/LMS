@@ -15,6 +15,18 @@ function App() {
         <h2>About Us</h2>
         <p>We are a team dedicated to creating awesome web experiences.</p>
       </section>
+      <div className='iframe-area'>
+            <h1>슬라이드</h1>
+            <iframe
+                src="/Amodule/slide/index.html"
+                style={{
+                    width: '1000px',
+                    height: '300px',
+                    border: 'none',
+                    margin: '0 auto',
+                }}
+            ></iframe>
+        </div>
     </div>
   );
 }
