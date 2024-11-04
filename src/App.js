@@ -6,17 +6,23 @@ function App() {
     const [selected, setSelected] = useState(null);
     const [showCode, setShowCode] = useState(false);
     const [htmlCode, setHtmlCode] = useState('');
+    const [cssCode, setCssCode] = useState('');
 
     const handleSelect = async (data) => {
         setSelected(data);
         setShowCode(false);
 
         try {
-            const response = await fetch(data.path);
-            const text = await response.text();
-            setHtmlCode(text);
+            const htmlResponse = await fetch(data.path);
+            const htmlText = await htmlResponse.text();
+            setHtmlCode(htmlText);
+
+            const cssPath = data.path.replace('index.html', 'style.css');
+            const cssResponse = await fetch(cssPath);
+            const cssText = await cssResponse.text();
+            setCssCode(cssText);
         } catch (error) {
-            console.error("Failed to fetch HTML code:", error);
+            console.error("Failed to fetch code:", error);
         }
     };
 
@@ -60,7 +66,7 @@ function App() {
                 </div>
             )}
 
-            <button onClick={toggleCode}>
+            <button onClick={toggleCode} className='codeCheckBtn'>
                 코드 확인하기
             </button>
 
@@ -70,6 +76,13 @@ function App() {
                         <h2>HTML 코드</h2>
                         <pre>{htmlCode}</pre>
                     </div>
+                    <div className='code-box'>
+                      <h2>CSS 코드</h2>
+                        <pre>{cssCode}</pre>
+                    </div>
+                    <button onClick={toggleCode} className='modalClose'>
+                        닫기
+                    </button>
                 </div>
             )}
         </div>
