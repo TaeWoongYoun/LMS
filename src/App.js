@@ -8,12 +8,13 @@ function App() {
   const [htmlCode, setHtmlCode] = useState('');
   const [cssCode, setCssCode] = useState('');
   const [jsCode, setJsCode] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   const handleSelect = async (data) => {
-  setSelected(data);
-  setShowCode(false);
+    setSelected(data);
+    setShowCode(false);
 
-  try {
+    try {
       const htmlResponse = await fetch(data.path);
       const htmlText = await htmlResponse.text();
       setHtmlCode(htmlText);
@@ -25,92 +26,103 @@ function App() {
 
       const jsPath = data.path.replace('index.html', 'script.js');
       try {
-          const jsResponse = await fetch(jsPath);
-          if (!jsResponse.ok) {
-              setJsCode('');
-              return;
-          }
-
-          const clonedResponse = jsResponse.clone();
-          const text = await clonedResponse.text();
-          
-          if (text.includes('<!DOCTYPE html>')) {
-              setJsCode('');
-          } else {
-              setJsCode(text);
-          }
-      } catch {
+        const jsResponse = await fetch(jsPath);
+        if (!jsResponse.ok) {
           setJsCode('');
+          return;
+        }
+
+        const clonedResponse = jsResponse.clone();
+        const text = await clonedResponse.text();
+
+        if (text.includes('<!DOCTYPE html>')) {
+          setJsCode('');
+        } else {
+          setJsCode(text);
+        }
+      } catch {
+        setJsCode('');
       }
-  } catch {
+    } catch {
       setJsCode('');
-  }
-};
+    }
+
+    setShowModal(true);
+  };
 
   const toggleCode = () => {
-      setShowCode((prev) => !prev);
+    setShowCode((prev) => !prev);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
   };
 
   return (
-      <div className="App">
-          <h1>모듈 목록</h1>
-          <div className='table-area'>
-              <table className="module-table">
-                  <thead>
-                      <tr>
-                          <th>난이도</th>
-                          <th>모듈</th>
-                          <th>폴더명</th>
-                          <th>부가설명</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {iframeData.map((item, index) => (
-                          <tr key={index} onClick={() => handleSelect(item)} className="table-row">
-                              <td>{item.level}</td>
-                              <td>{item.module}모듈</td>
-                              <td>{item.name}</td>
-                              <td>{item.description}</td>
-                          </tr>
-                      ))}
-                  </tbody>
-              </table>
-          </div>
+    <div className="App">
+      <div className="page1">
+        <h1>모듈 목록</h1>
+        <div className="table-area">
+          <table className="module-table">
+            <thead>
+              <tr>
+                <th>난이도</th>
+                <th>모듈</th>
+                <th>폴더명</th>
+                <th>부가설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              {iframeData.map((item, index) => (
+                <tr key={index} onClick={() => handleSelect(item)} className="table-row">
+                  <td>{item.level}</td>
+                  <td>{item.module}모듈</td>
+                  <td>{item.name}</td>
+                  <td>{item.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-          {selected && (
-              <div className='iframe-area'>
-                  <h1>{selected.name}</h1>
-                  <iframe
-                      src={selected.path}
-                      title={selected.title}
-                  ></iframe>
-              </div>
-          )}
+      {showModal && (
+        <div className="modal-container">
+          <div className="modal-content">
+            <h1>{selected.name}</h1>
+            <iframe src={selected.path} title={selected.title}></iframe>
+            <button onClick={closeModal} className="modalClose">
+              닫기
+            </button>
+            <div className="page3">
+              <button onClick={toggleCode} className="codeShowBtn">
+                코드 확인하기
+              </button>
 
-          <button onClick={toggleCode} className='codeCheckBtn'>
-              코드 확인하기
-          </button>
-
-          {showCode && htmlCode && (
-              <div className="code-container">
+              {showCode && (
+                <div className="code-container">
                   <div className="code-box">
                     <h2>HTML 코드</h2>
                     <pre>{htmlCode}</pre>
                   </div>
-                  <div className='code-box'>
+                  <div className="code-box">
                     <h2>CSS 코드</h2>
                     <pre>{cssCode}</pre>
                   </div>
-                  <div className='code-box'>
+                  <div className="code-box">
                     <h2>JS 코드</h2>
                     <pre>{jsCode}</pre>
                   </div>
-                  <button onClick={toggleCode} className='modalClose'>
-                      닫기
+                  <button onClick={toggleCode} className="codeHiddenBtn">
+                    닫기
                   </button>
-              </div>
-          )}
-      </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

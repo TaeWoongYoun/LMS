@@ -2,10 +2,16 @@
   text-align: center;
 }
 
+.page1{
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  place-content: center;
+}
+
 .table-area{
-  margin: 0 auto;
   width: 1470px;
-  height: 350px;
+  height: 450px;
   overflow-y: scroll;
   font-size: 20px;
 }
@@ -48,15 +54,26 @@ iframe{
   margin: 0 auto;
 }
 
-.codeCheckBtn{
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
+.codeShowBtn{
+  position: absolute;
+  top: 10px;
+  right: 100px;
   background-color: #111;
   color: #fff;
   width: 150px;
   height: 40px;
   font-size: 18px;
+  border-radius: 5px;
+}
+
+.exCode{
+  top: 0;
+  left: 40px;
+  position: absolute;
+  color: #111;
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: #fff;
 }
 
 .code-container {
@@ -69,6 +86,7 @@ iframe{
   height: 100vh;
   display: flex;
   justify-content: space-evenly;
+  margin-top: 50px;
   padding: 10px;
 }
 
@@ -76,8 +94,9 @@ iframe{
   margin: 0 10px;
   padding: 10px;
   width: 30%;
+  height: 80vh;
   border: 1px solid #ccc;
-  border-radius: 10px;
+  border-radius: 5px;
   background-color: #f9f9f9;
   overflow-y: auto;
 }
@@ -90,13 +109,51 @@ pre {
   color: #111;
 }
 
-.modalClose{
+.codeHiddenBtn{
   position: fixed;
-  bottom: 10px;
-  right: 10px;
-  background-color: #111;
-  color: #fff;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  color: #111;
+  font-weight: bold;
   width: 150px;
   height: 40px;
+  font-size: 20px;
+  border-radius: 5px;
+}
+
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  width: 1440px;
+  border-radius: 8px;
+  position: relative;
+}
+
+.modalClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 0px 20px;
   font-size: 18px;
+  height: 40px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
