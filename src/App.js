@@ -1,34 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Welcome to My Simple Homepage</h1>
-        <p>This is a simple React homepage example.</p>
-        <button onClick={() => alert("Hello, welcome to my site!")}>
-          Click me!
-        </button>
-      </header>
-      <section className="about-section">
-        <h2>About Us</h2>
-        <p>We are a team dedicated to creating awesome web experiences.</p>
-      </section>
-      <div className='iframe-area'>
-            <h1>슬라이드</h1>
-            <iframe
-                src="/Amodule/slide/index.html"
-                style={{
-                    width: '1000px',
-                    height: '300px',
-                    border: 'none',
-                    margin: '0 auto',
-                }}
-            ></iframe>
+    const [selected, setSelected] = useState(null);
+
+    const iframeData = [
+        { module: "Amodule", name: "아코디언", path: "/Amodule/accordion", title: "Amodule-Accordion" },
+        { module: "Amodule", name: "큐브", path: "/Amodule/cube/index.html", title: "Amodule-Cube" },
+        { module: "Amodule", name: "달", path: "/Amodule/LunarEclipse/index.html", title: "Amodule-LunarEclipse" },
+        { module: "Amodule", name: "모달", path: "/Amodule/modal/index.html", title: "Amodule-Modal" },
+        { module: "Amodule", name: "슬라이드", path: "/Amodule/slide/index.html", title: "Amodule-Slide" },
+    ];
+
+    const handleSelect = (data) => {
+        setSelected(data);
+    };
+
+    return (
+        <div className="App">
+            <h1>모듈 목록</h1>
+            <table className="module-table">
+                <thead>
+                    <tr>
+                        <th>폴더명</th>
+                        <th>세부 폴더명</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {iframeData.map((item, index) => (
+                        <tr key={index} onClick={() => handleSelect(item)} className="table-row">
+                            <td>{item.module}</td>
+                            <td>{item.name}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+
+            {selected && (
+                <div className='iframe-area'>
+                    <h1>{selected.name}</h1>
+                    <iframe
+                        src={selected.path}
+                        title={selected.title}
+                    ></iframe>
+                </div>
+            )}
         </div>
-    </div>
-  );
+    );
 }
 
 export default App;

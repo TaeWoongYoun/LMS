@@ -2,34 +2,29 @@
   text-align: center;
 }
 
-.App-header {
-  background-color: #282c34;
-  padding: 20px;
-  color: white;
+table{
+  border-collapse: collapse;
+  margin: 0 auto;
 }
 
-.about-section {
-  margin: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
-
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 10px;
+th, td{
+  border: 1px solid black;
+  padding: 5px 10px;
 }
 
 .iframe-area{
   width: 100%;
   height: 1000px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+
+.iframe-area h1{
+  padding: 0;
+  margin: 0;
 }
 
 iframe{
   width: 1000px;
   height: 700px;
+  border: none;
+  margin: 0 auto;
 }
