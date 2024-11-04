@@ -60,8 +60,19 @@ function App() {
 
   return (
     <div className="App">
+      <header>
+        <div className='logo'>
+          <h1>DBSWEB</h1>
+        </div>
+        <nav>
+            <ul>
+              <li>인사말</li>
+              <li>로그인</li>
+              <li>회원가입</li>
+            </ul>
+          </nav>
+      </header>
       <div className="page1">
-        <h1>모듈 목록</h1>
         <div className="table-area">
           <table className="module-table">
             <thead>
@@ -75,7 +86,7 @@ function App() {
             <tbody>
               {iframeData.map((item, index) => (
                 <tr key={index} onClick={() => handleSelect(item)} className="table-row">
-                  <td>{item.level}</td>
+                  <td>Lv. {item.level}</td>
                   <td>{item.module}모듈</td>
                   <td>{item.name}</td>
                   <td>{item.description}</td>
