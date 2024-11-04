@@ -4,6 +4,8 @@
 
 table{
   width: 1000px;
+  height: 300px;
+  overflow-y: scroll;
   border-collapse: collapse;
   margin: 0 auto;
 }
@@ -35,7 +37,7 @@ th, td{
 }
 
 iframe{
-  width: 1000px;
+  width: 1200px;
   height: 700px;
   border: none;
   margin: 0 auto;
