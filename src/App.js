@@ -17,8 +17,9 @@ function App() {
                   <thead>
                       <tr>
                           <th>난이도</th>
+                          <th>모듈</th>
                           <th>폴더명</th>
-                          <th>세부 폴더명</th>
+                          <th>부가설명</th>
                       </tr>
                   </thead>
                   <tbody>
@@ -27,6 +28,7 @@ function App() {
                               <td>{item.level}</td>
                               <td>{item.module}모듈</td>
                               <td>{item.name}</td>
+                              <td>{item.description}</td>
                           </tr>
                       ))}
                   </tbody>

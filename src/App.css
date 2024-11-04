@@ -4,13 +4,14 @@
 
 .table-area{
   margin: 0 auto;
-  width: 1030px;
-  height: 300px;
+  width: 1230px;
+  height: 350px;
   overflow-y: scroll;
+  font-size: 20px;
 }
 
 table {
-  width: 1000px;
+  width: 1200px;
   border-collapse: collapse;
 }
 
