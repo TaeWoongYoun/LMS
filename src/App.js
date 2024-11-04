@@ -3,90 +3,115 @@ import './App.css';
 import iframeData from './data/iframeData';
 
 function App() {
-    const [selected, setSelected] = useState(null);
-    const [showCode, setShowCode] = useState(false);
-    const [htmlCode, setHtmlCode] = useState('');
-    const [cssCode, setCssCode] = useState('');
+  const [selected, setSelected] = useState(null);
+  const [showCode, setShowCode] = useState(false);
+  const [htmlCode, setHtmlCode] = useState('');
+  const [cssCode, setCssCode] = useState('');
+  const [jsCode, setJsCode] = useState('');
 
-    const handleSelect = async (data) => {
-        setSelected(data);
-        setShowCode(false);
+  const handleSelect = async (data) => {
+  setSelected(data);
+  setShowCode(false);
 
-        try {
-            const htmlResponse = await fetch(data.path);
-            const htmlText = await htmlResponse.text();
-            setHtmlCode(htmlText);
+  try {
+      const htmlResponse = await fetch(data.path);
+      const htmlText = await htmlResponse.text();
+      setHtmlCode(htmlText);
 
-            const cssPath = data.path.replace('index.html', 'style.css');
-            const cssResponse = await fetch(cssPath);
-            const cssText = await cssResponse.text();
-            setCssCode(cssText);
-        } catch (error) {
-            console.error("Failed to fetch code:", error);
-        }
-    };
+      const cssPath = data.path.replace('index.html', 'style.css');
+      const cssResponse = await fetch(cssPath);
+      const cssText = await cssResponse.text();
+      setCssCode(cssText);
 
-    const toggleCode = () => {
-        setShowCode((prev) => !prev);
-    };
+      const jsPath = data.path.replace('index.html', 'script.js');
+      try {
+          const jsResponse = await fetch(jsPath);
+          if (!jsResponse.ok) {
+              setJsCode('');
+              return;
+          }
 
-    return (
-        <div className="App">
-            <h1>모듈 목록</h1>
-            <div className='table-area'>
-                <table className="module-table">
-                    <thead>
-                        <tr>
-                            <th>난이도</th>
-                            <th>모듈</th>
-                            <th>폴더명</th>
-                            <th>부가설명</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {iframeData.map((item, index) => (
-                            <tr key={index} onClick={() => handleSelect(item)} className="table-row">
-                                <td>{item.level}</td>
-                                <td>{item.module}모듈</td>
-                                <td>{item.name}</td>
-                                <td>{item.description}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+          const clonedResponse = jsResponse.clone();
+          const text = await clonedResponse.text();
+          
+          if (text.includes('<!DOCTYPE html>')) {
+              setJsCode('');
+          } else {
+              setJsCode(text);
+          }
+      } catch {
+          setJsCode('');
+      }
+  } catch {
+      setJsCode('');
+  }
+};
 
-            {selected && (
-                <div className='iframe-area'>
-                    <h1>{selected.name}</h1>
-                    <iframe
-                        src={selected.path}
-                        title={selected.title}
-                    ></iframe>
-                </div>
-            )}
+  const toggleCode = () => {
+      setShowCode((prev) => !prev);
+  };
 
-            <button onClick={toggleCode} className='codeCheckBtn'>
-                코드 확인하기
-            </button>
+  return (
+      <div className="App">
+          <h1>모듈 목록</h1>
+          <div className='table-area'>
+              <table className="module-table">
+                  <thead>
+                      <tr>
+                          <th>난이도</th>
+                          <th>모듈</th>
+                          <th>폴더명</th>
+                          <th>부가설명</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {iframeData.map((item, index) => (
+                          <tr key={index} onClick={() => handleSelect(item)} className="table-row">
+                              <td>{item.level}</td>
+                              <td>{item.module}모듈</td>
+                              <td>{item.name}</td>
+                              <td>{item.description}</td>
+                          </tr>
+                      ))}
+                  </tbody>
+              </table>
+          </div>
 
-            {showCode && htmlCode && (
-                <div className="code-container">
-                    <div className="code-box">
-                        <h2>HTML 코드</h2>
-                        <pre>{htmlCode}</pre>
-                    </div>
-                    <div className='code-box'>
-                      <h2>CSS 코드</h2>
-                        <pre>{cssCode}</pre>
-                    </div>
-                    <button onClick={toggleCode} className='modalClose'>
-                        닫기
-                    </button>
-                </div>
-            )}
-        </div>
-    );
+          {selected && (
+              <div className='iframe-area'>
+                  <h1>{selected.name}</h1>
+                  <iframe
+                      src={selected.path}
+                      title={selected.title}
+                  ></iframe>
+              </div>
+          )}
+
+          <button onClick={toggleCode} className='codeCheckBtn'>
+              코드 확인하기
+          </button>
+
+          {showCode && htmlCode && (
+              <div className="code-container">
+                  <div className="code-box">
+                    <h2>HTML 코드</h2>
+                    <pre>{htmlCode}</pre>
+                  </div>
+                  <div className='code-box'>
+                    <h2>CSS 코드</h2>
+                    <pre>{cssCode}</pre>
+                  </div>
+                  <div className='code-box'>
+                    <h2>JS 코드</h2>
+                    <pre>{jsCode}</pre>
+                  </div>
+                  <button onClick={toggleCode} className='modalClose'>
+                      닫기
+                  </button>
+              </div>
+          )}
+      </div>
+  );
 }
 
 export default App;
