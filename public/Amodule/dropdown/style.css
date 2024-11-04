@@ -1,0 +1,36 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+details{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    background-color: black;
+    color: #fff;
+    font-size: 20px;
+    border-radius: 10px;
+}
+
+summary{
+    padding: 20px;
+}
+
+summary::marker{
+    font-size: 0;
+}
+
+summary:hover{
+    cursor: pointer;
+}
+
+details p{
+    padding: 20px;
+    font-size: 18px;
+    background-color: #333;
+    border: 10px solid black;
+    border-radius: 20px;
+}
