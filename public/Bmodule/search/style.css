@@ -1,0 +1,28 @@
+*{
+    box-sizing: border-box;
+}
+
+ul{
+    list-style: none;
+}
+
+input, button{
+    padding: 5px 10px;
+}
+
+#list{
+    border: 1px solid #ccc;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#list > li{
+    width: 340px;
+    margin-bottom: 20px;
+}
+
+#list > li > img{
+    width: 80%;
+    border: 1px solid #ccc;
+}

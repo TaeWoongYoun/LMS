@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>본격적인 드래드&드롭</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 간단하게 구현하는 이미지 이동 -->
+    <div class="boxContainer">
+        <div id="box1" ondrop="drop(event)" ondragover="dragEnter(event)">
+            <img id="img" src="https://item.kakaocdn.net/do/493188dee481260d5c89790036be0e66f604e7b0e6900f9ac53a43965300eb9a" alt="" draggable="true" ondragstart="drag(event)">
+        </div>
+        <div id="box2" ondrop="drop(event)" ondragover="dragEnter(event)"></div>
+        <div id="box3" ondrop="drop(event)" ondragover="dragEnter(event)"></div>
+        <div id="box4" ondrop="drop(event)" ondragover="dragEnter(event)"></div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>

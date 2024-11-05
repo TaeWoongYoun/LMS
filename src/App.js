@@ -24,7 +24,7 @@ function App() {
       const cssText = await cssResponse.text();
       setCssCode(cssText);
 
-      const jsPath = data.path.replace('index.html', 'script.js');
+      const jsPath = data.path.replace('index.html', 'index.js');
       try {
         const jsResponse = await fetch(jsPath);
         if (!jsResponse.ok) {

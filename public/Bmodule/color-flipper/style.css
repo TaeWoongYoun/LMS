@@ -1,0 +1,50 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+.container{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 300px;
+    background-color: aqua;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.content{
+    width: 300px;
+    height: 100px;
+}
+
+.content p{
+    width: 100%;
+    height: 40px;
+    background-color: black;
+    line-height: 40px;
+    border-radius: 10px;
+    color: #FFF;
+    text-align: center;
+}
+
+.content span{
+    color: aqua;
+}
+
+button{
+    width: 120px;
+    height: 40px;
+    background-color: black;
+    color: #FFF;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 16px;
+    border: none;
+    margin-top: 20px;
+    margin-left: 90px;
+}
