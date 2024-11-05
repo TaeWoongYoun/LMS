@@ -22,6 +22,7 @@ git clone https://github.com/TaeWoongYoun/react-start.git
 cd react-start
 npm install
 npm start
+```
 
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
