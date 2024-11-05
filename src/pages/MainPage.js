@@ -13,12 +13,14 @@ function MainPage() {
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState('');
 
+    // 코드 에디터 효과
     useEffect(() => {
         if (showCode) {
         Prism.highlightAll();
     }
     }, [showCode]);
 
+    // 과제 선택
     const handleSelect = async (data) => {
         setSelected(data);
         setShowCode(false);
@@ -51,14 +53,17 @@ function MainPage() {
         setShowModal(true);
     };
 
+    // 코드 확인 모달
     const toggleCode = () => {
         setShowCode((prev) => !prev);
     };
 
+    // 과제 모달
     const closeModal = () => {
         setShowModal(false);
     };
 
+    // 데이터 필터링
     const filteredData = iframeData.filter(item => {
         const matchesSearch = item.name.includes(searchTerm);
         const matchesLevel = selectedLevel ? item.level === parseInt(selectedLevel) : true;
@@ -68,8 +73,9 @@ function MainPage() {
     });
 
     return (
-    <div className="main-page"> {/* 최상위 wrapper div 추가 */}
+    <div className="main-page">
         <div className="content">
+            {/* 난이도/모듈 선택 및 과제 검색 */}
             <div className='search-area'>
                 <div>
                     <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
@@ -89,7 +95,9 @@ function MainPage() {
                 </div>
                 <input type="text" placeholder="검색" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
             </div>
+            {/* 난이도/모듈 선택 및 과제 검색 */}
 
+            {/* 과제 테이블*/}
             <div className="table-area">
                 <table>
                     <thead>
@@ -112,8 +120,10 @@ function MainPage() {
                     </tbody>
                 </table>
             </div>
+            {/* 과제 테이블*/}
         </div>
 
+        {/* 실행화면 확인 모달 */}
         {showModal && (
         <div className="modal-area">
             <div className="modal-content">
@@ -122,6 +132,7 @@ function MainPage() {
             <button onClick={closeModal} className="modal-close">닫기</button>
             <button onClick={toggleCode} className="code-show-btn">코드 확인하기</button>
 
+            {/* 코드 확인 모달 */}
             {showCode && (
                 <div className="code-area">
                     <div className="code-box">
@@ -145,6 +156,7 @@ function MainPage() {
                     <button onClick={toggleCode} className="code-hidden-btn">닫기</button>
                 </div>
             )}
+            {/* 코드 확인 모달 */}
             </div>
         </div>
         )}
