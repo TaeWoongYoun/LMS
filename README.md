@@ -15,6 +15,14 @@
 - **Prism.js 사용**: 코드 확인 영역에서 Prism.js를 활용하여 실제 에디터처럼 보여주도록 개선.
 - **서브페이지 기능 구현**: 테스트 서브페이지 추가.
 
+## 프로젝트 클론하기
+
+```bash
+git clone https://github.com/TaeWoongYoun/react-start.git
+cd react-start
+npm install
+npm start
+
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=reactrouter&logoColor=white)](https://reactrouter.com/)
