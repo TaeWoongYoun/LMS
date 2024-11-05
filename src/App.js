@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import iframeData from './data/iframeData';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';  // 다크 테마 사용
 
 function App() {
   const [selected, setSelected] = useState(null);
@@ -13,6 +15,13 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('');
   const [selectedModule, setSelectedModule] = useState('');
+
+  // Prism 하이라이팅 적용
+  useEffect(() => {
+    if (showCode) {
+      Prism.highlightAll();
+    }
+  }, [showCode]);
 
   const handleSelect = async (data) => {
     setSelected(data);
@@ -38,7 +47,7 @@ function App() {
     const text = await clonedResponse.text();
 
     if (text.includes('<!DOCTYPE html>')) {
-      setJsCode('');
+      setJsCode('None');
     } else {
       setJsCode(text);
     }
@@ -80,7 +89,7 @@ function App() {
         <section>
           <div>
             <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
-              <option value="" selected>난이도(전체)</option>
+              <option value="">난이도(전체)</option>
               <option value="0">Lv. 0</option>
               <option value="1">Lv. 1</option>
               <option value="2">Lv. 2</option>
@@ -89,7 +98,7 @@ function App() {
               <option value="5">Lv. 5</option>
             </select>
             <select onChange={(e) => setSelectedModule(e.target.value)} defaultValue="">
-              <option value="" selected>모듈(전체)</option>
+              <option value="">모듈(전체)</option>
               <option value="A">A모듈</option>
               <option value="B">B모듈</option>
             </select>
@@ -126,28 +135,38 @@ function App() {
             <h1>{selected.name}</h1>
             <iframe src={selected.path} title={selected.title}></iframe>
             <button onClick={closeModal} className="modalClose">닫기</button>
-            <div className="page3">
               <button onClick={toggleCode} className="codeShowBtn">코드 확인하기</button>
               {showCode && (
                 <div className="code-container">
                   <div className="code-box">
                     <h2>HTML 코드</h2>
-                    <pre>{htmlCode}</pre>
+                    <pre className="code-editor-style">
+                      <code className="language-markup">
+                        {htmlCode}
+                      </code>
+                    </pre>
                   </div>
                   <div className="code-box">
                     <h2>CSS 코드</h2>
-                    <pre>{cssCode}</pre>
+                    <pre className="code-editor-style">
+                      <code className="language-css">
+                        {cssCode}
+                      </code>
+                    </pre>
                   </div>
                   <div className="code-box">
                     <h2>JS 코드</h2>
-                    <pre>{jsCode}</pre>
+                    <pre className="code-editor-style">
+                      <code className="language-javascript">
+                        {jsCode}
+                      </code>
+                    </pre>
                   </div>
                   <button onClick={toggleCode} className="codeHiddenBtn">닫기</button>
                 </div>
               )}
             </div>
           </div>
-        </div>
       )}
     </div>
   );
