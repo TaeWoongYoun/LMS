@@ -10,15 +10,15 @@ import 'prismjs/themes/prism-tomorrow.css';
 function App() {
   return (
     <div className="App">
-    <Router>
-      <Header />
-      <Routes>
-        <Route path='/' element={<MainPage/>} />
-        <Route path='/welcome' element={<WelcomePage />} />
-        <Route path='/login' element={<LoginPage />} />
-        <Route path='/join' element={<JoinPage />} />
-      </Routes>
-    </Router>
+      <Router>
+        <Header />
+        <Routes>
+          <Route path='/' element={<MainPage/>} />
+          <Route path='/welcome' element={<WelcomePage />} />
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/join' element={<JoinPage />} />
+        </Routes>
+      </Router>
     </div>
   )
 }
