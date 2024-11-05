@@ -18,37 +18,29 @@ function App() {
     setSelected(data);
     setShowCode(false);
 
-    try {
-      const htmlResponse = await fetch(data.path);
-      const htmlText = await htmlResponse.text();
-      setHtmlCode(htmlText);
+    const htmlResponse = await fetch(data.path);
+    const htmlText = await htmlResponse.text();
+    setHtmlCode(htmlText);
 
-      const cssPath = data.path.replace('index.html', 'style.css');
-      const cssResponse = await fetch(cssPath);
-      const cssText = await cssResponse.text();
-      setCssCode(cssText);
+    const cssPath = data.path.replace('index.html', 'style.css');
+    const cssResponse = await fetch(cssPath);
+    const cssText = await cssResponse.text();
+    setCssCode(cssText);
 
-      const jsPath = data.path.replace('index.html', 'index.js');
-      try {
-        const jsResponse = await fetch(jsPath);
-        if (!jsResponse.ok) {
-          setJsCode('');
-          return;
-        }
-
-        const clonedResponse = jsResponse.clone();
-        const text = await clonedResponse.text();
-
-        if (text.includes('<!DOCTYPE html>')) {
-          setJsCode('');
-        } else {
-          setJsCode(text);
-        }
-      } catch {
-        setJsCode('');
-      }
-    } catch {
+    const jsPath = data.path.replace('index.html', 'index.js');
+    const jsResponse = await fetch(jsPath);
+    if (!jsResponse.ok) {
       setJsCode('');
+      return;
+    }
+
+    const clonedResponse = jsResponse.clone();
+    const text = await clonedResponse.text();
+
+    if (text.includes('<!DOCTYPE html>')) {
+      setJsCode('');
+    } else {
+      setJsCode(text);
     }
 
     setShowModal(true);
@@ -88,8 +80,7 @@ function App() {
         <section>
           <div>
             <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
-              <option value="" disabled selected>난이도</option>
-              <option value="">전체</option>
+              <option value="" selected>난이도(전체)</option>
               <option value="0">Lv. 0</option>
               <option value="1">Lv. 1</option>
               <option value="2">Lv. 2</option>
@@ -98,13 +89,12 @@ function App() {
               <option value="5">Lv. 5</option>
             </select>
             <select onChange={(e) => setSelectedModule(e.target.value)} defaultValue="">
-              <option value="" disabled selected>모듈</option>
-              <option value="">전체</option>
+              <option value="" selected>모듈(전체)</option>
               <option value="A">A모듈</option>
               <option value="B">B모듈</option>
             </select>
           </div>
-          <input type="text" placeholder="검색"value={searchTerm}onChange={(e) => setSearchTerm(e.target.value)}/>
+          <input type="text" placeholder="검색" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
         </section>
         <div className="table-area">
           <table className="module-table">

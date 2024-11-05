@@ -55,7 +55,7 @@ const iframeData = [
     { level: 2, module: "B", name: "이미지 슬라이드", description: "자동 이미지 슬라이드 기능 구현", path: "/Bmodule/imgSlide/index.html", title: "B-ImgSlide" },
     { level: 1, module: "B", name: "화면 키보드 입력", description: "화면의 키보드를 클릭하여 검색창에 텍스트 입력 기능 구현", path: "/Bmodule/keyboard/index.html", title: "B-Keyboard" },
     { level: 2, module: "B", name: "파일 업로드 표시", description: "내 컴퓨터의 파일을 업로드하여 화면에 표시", path: "/Bmodule/loadFile/index.html", title: "B-LoadFile" },
-    { level: 1, module: "B", name: "모달 창", description: "함수를 사용한 모달창 구현", path: "/Bmodule/modal/index.html", title: "B-Modal" },
+    { level: 1, module: "B", name: "모달창", description: "함수를 사용한 모달창 구현", path: "/Bmodule/modal/index.html", title: "B-Modal" },
     { level: 3, module: "B", name: "리뷰 캐러셀", description: "이전, 다음, 랜덤 버튼이 포함된 리뷰 캐러셀 기능", path: "/Bmodule/reviewCarousel/index.html", title: "B-ReviewCarousel" },
     { level: 4, module: "B", name: "포켓몬 검색", description: "포켓몬 검색 기능 구현", path: "/Bmodule/search/index.html", title: "B-Search" },
     { level: 5, module: "B", name: "테트리스 게임", description: "테트리스 게임 기능 구현", path: "/Bmodule/tatris/index.html", title: "B-Tatris" }
