@@ -33,7 +33,7 @@ header{
 }
 
 nav{
-  width: 300px;
+  width: 450px;
   height: 100%;
 }
 
@@ -43,7 +43,7 @@ nav ul{
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  font-size: 18px;
+  font-size: 22px;
 }
 
 .content{
