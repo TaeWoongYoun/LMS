@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import iframeData from './data/iframeData';
 import Prism from 'prismjs';
-import 'prismjs/themes/prism-tomorrow.css';  // 다크 테마 사용
+import 'prismjs/themes/prism-tomorrow.css';
 
 function App() {
   const [selected, setSelected] = useState(null);
@@ -23,6 +23,7 @@ function App() {
     }
   }, [showCode]);
 
+  // 해당하는 코드 가져오기
   const handleSelect = async (data) => {
     setSelected(data);
     setShowCode(false);
@@ -55,14 +56,17 @@ function App() {
     setShowModal(true);
   };
 
+  // 코드 확인 모달
   const toggleCode = () => {
     setShowCode((prev) => !prev);
   };
 
+  // 과제 확인 모달
   const closeModal = () => {
     setShowModal(false);
   };
 
+  // 데이터 필터링
   const filteredData = iframeData.filter(item => {
     const matchesSearch = item.name.includes(searchTerm);
     const matchesLevel = selectedLevel ? item.level === parseInt(selectedLevel) : true;
@@ -73,6 +77,7 @@ function App() {
 
   return (
     <div className="App">
+      {/* 헤더 영역*/}
       <header>
         <div className='logo'>
           <h1>DBSWEB</h1>
@@ -85,8 +90,12 @@ function App() {
           </ul>
         </nav>
       </header>
-      <div className="page1">
-        <section>
+      {/* 헤더 영역*/}
+
+      {/* 과제 검색 영역 */}
+      <div className="content">
+        {/* 검색 */}
+        <div className='search-area'>
           <div>
             <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
               <option value="">난이도(전체)</option>
@@ -104,9 +113,12 @@ function App() {
             </select>
           </div>
           <input type="text" placeholder="검색" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
-        </section>
+        </div>
+        {/* 검색 */}
+
+        {/* 테이블 */}
         <div className="table-area">
-          <table className="module-table">
+          <table>
             <thead>
               <tr>
                 <th>난이도</th>
@@ -117,7 +129,7 @@ function App() {
             </thead>
             <tbody>
               {filteredData.map((item, index) => (
-                <tr key={index} onClick={() => handleSelect(item)} className="table-row">
+                <tr key={index} onClick={() => handleSelect(item)}>
                   <td>Lv. {item.level}</td>
                   <td>{item.module}모듈</td>
                   <td>{item.name}</td>
@@ -127,20 +139,25 @@ function App() {
             </tbody>
           </table>
         </div>
+        {/* 테이블 */}
       </div>
+      {/* 과제 검색 영역 */}
 
+      {/* 과제 확인 영역 */}
       {showModal && (
-        <div className="modal-container">
+        <div className="modal-area">
           <div className="modal-content">
             <h1>{selected.name}</h1>
             <iframe src={selected.path} title={selected.title}></iframe>
-            <button onClick={closeModal} className="modalClose">닫기</button>
-              <button onClick={toggleCode} className="codeShowBtn">코드 확인하기</button>
+            <button onClick={closeModal} className="modal-close">닫기</button>
+            <button onClick={toggleCode} className="code-show-btn">코드 확인하기</button>
+            
+              {/* 코드 확인 영역 */}
               {showCode && (
-                <div className="code-container">
+                <div className="code-area">
                   <div className="code-box">
                     <h2>HTML 코드</h2>
-                    <pre className="code-editor-style">
+                    <pre>
                       <code className="language-markup">
                         {htmlCode}
                       </code>
@@ -148,26 +165,29 @@ function App() {
                   </div>
                   <div className="code-box">
                     <h2>CSS 코드</h2>
-                    <pre className="code-editor-style">
+                    <pre>
                       <code className="language-css">
                         {cssCode}
                       </code>
                     </pre>
                   </div>
                   <div className="code-box">
-                    <h2>JS 코드</h2>
-                    <pre className="code-editor-style">
+                    <h2>JavaScript 코드</h2>
+                    <pre>
                       <code className="language-javascript">
                         {jsCode}
                       </code>
                     </pre>
                   </div>
-                  <button onClick={toggleCode} className="codeHiddenBtn">닫기</button>
+                  <button onClick={toggleCode} className="code-hidden-btn">닫기</button>
                 </div>
               )}
+              {/* 코드 확인 영역 */}
+
             </div>
           </div>
       )}
+      {/* 과제 확인 영역 */}
     </div>
   );
 }
