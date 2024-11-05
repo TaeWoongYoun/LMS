@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import WelcomePage from './pages/WelcomePage';
-import LoginPage from './pages/LoginPage';
-import JoinPage from './pages/JoinPage';
 import './App.css';
+import Header from './components/Header.js';
 import iframeData from './data/iframeData';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
@@ -81,31 +78,7 @@ function App() {
 
   return (
     <div className="App">
-      {/* 헤더 영역*/}
-      <Router>
-        <header>
-          <div className='logo'>
-            <h1><Link to="/">DBSWEB</Link></h1>
-          </div>
-          <nav>
-            <ul>
-              <li><Link to="/welcome">Welcome</Link></li>
-              <li><Link to="/login">Login</Link></li>
-              <li><Link to="/join">Join</Link></li>
-            </ul>
-          </nav>
-        </header>
-        {/* 헤더 영역*/}
-
-        {/* router */}
-        <Routes>
-          <Route path='/welcome' element={<WelcomePage/>} />
-          <Route path='/login' element={<LoginPage/>} />
-          <Route path='/join' element={<JoinPage/>} />
-        </Routes>
-      </Router>
-      {/* router */}
-
+      <Header/>
       {/* 과제 검색 영역 */}
       <div className="content">
         {/* 검색 */}
