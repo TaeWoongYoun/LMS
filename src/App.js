@@ -125,14 +125,9 @@ function App() {
           <div className="modal-content">
             <h1>{selected.name}</h1>
             <iframe src={selected.path} title={selected.title}></iframe>
-            <button onClick={closeModal} className="modalClose">
-              닫기
-            </button>
+            <button onClick={closeModal} className="modalClose">닫기</button>
             <div className="page3">
-              <button onClick={toggleCode} className="codeShowBtn">
-                코드 확인하기
-              </button>
-
+              <button onClick={toggleCode} className="codeShowBtn">코드 확인하기</button>
               {showCode && (
                 <div className="code-container">
                   <div className="code-box">
@@ -147,9 +142,7 @@ function App() {
                     <h2>JS 코드</h2>
                     <pre>{jsCode}</pre>
                   </div>
-                  <button onClick={toggleCode} className="codeHiddenBtn">
-                    닫기
-                  </button>
+                  <button onClick={toggleCode} className="codeHiddenBtn">닫기</button>
                 </div>
               )}
             </div>
