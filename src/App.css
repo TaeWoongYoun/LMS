@@ -43,22 +43,50 @@ nav ul{
 
 .page1{
   width: 100%;
-  height: 900px;
+  height: calc(100vh - 70px);
   display: grid;
   place-content: center;
+}
+
+section{
+  width: 1440px;
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+section select{
+  width: 200px;
+  height: 40px;
+  border: 1px solid black;
+  padding-left: 10px;
+  margin-right: 10px;
+  font-size: 20px;
+  border-radius: 10px;
+}
+
+section input{
+  width: 400px;
+  padding-left: 10px;
+  height: 40px;
+  border: 1px solid black;
+  border-radius: 10px;
+  font-size: 20px;
 }
 
 .table-area{
   width: 1455px;
   height: 450px;
-  overflow-y: scroll;
+  overflow-y: auto;
   font-size: 20px;
 }
 
 table {
   width: 1440px;
   border-collapse: collapse;
-  border-radius: 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
   overflow: hidden;
 }
 

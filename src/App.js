@@ -10,6 +10,11 @@ function App() {
   const [jsCode, setJsCode] = useState('');
   const [showModal, setShowModal] = useState(false);
 
+  // 새로운 state 추가
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedModule, setSelectedModule] = useState('');
+
   const handleSelect = async (data) => {
     setSelected(data);
     setShowCode(false);
@@ -58,6 +63,15 @@ function App() {
     setShowModal(false);
   };
 
+  // 검색 및 필터링에 맞는 데이터 필터링
+  const filteredData = iframeData.filter(item => {
+    const matchesSearch = item.name.includes(searchTerm);
+    const matchesLevel = selectedLevel ? item.level === parseInt(selectedLevel) : true;
+    const matchesModule = selectedModule ? item.module === selectedModule : true;
+
+    return matchesSearch && matchesLevel && matchesModule;
+  });
+
   return (
     <div className="App">
       <header>
@@ -65,14 +79,33 @@ function App() {
           <h1>DBSWEB</h1>
         </div>
         <nav>
-            <ul>
-              <li>인사말</li>
-              <li>로그인</li>
-              <li>회원가입</li>
-            </ul>
-          </nav>
+          <ul>
+            <li>인사말</li>
+            <li>로그인</li>
+            <li>회원가입</li>
+          </ul>
+        </nav>
       </header>
       <div className="page1">
+        <section>
+          <div>
+            <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
+              <option value="" disabled>난이도</option>
+              <option value="0">Lv. 0</option>
+              <option value="1">Lv. 1</option>
+              <option value="2">Lv. 2</option>
+              <option value="3">Lv. 3</option>
+              <option value="4">Lv. 4</option>
+              <option value="5">Lv. 5</option>
+            </select>
+            <select onChange={(e) => setSelectedModule(e.target.value)} defaultValue="">
+              <option value="" disabled>모듈</option>
+              <option value="A">A모듈</option>
+              <option value="B">B모듈</option>
+            </select>
+          </div>
+          <input type="text" placeholder="검색"value={searchTerm}onChange={(e) => setSearchTerm(e.target.value)}/>
+        </section>
         <div className="table-area">
           <table className="module-table">
             <thead>
@@ -84,7 +117,7 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {iframeData.map((item, index) => (
+              {filteredData.map((item, index) => (
                 <tr key={index} onClick={() => handleSelect(item)} className="table-row">
                   <td>Lv. {item.level}</td>
                   <td>{item.module}모듈</td>
