@@ -58,6 +58,17 @@ function MainPage() {
         setShowCode((prev) => !prev);
     };
 
+    const toggleCodeWithPassword = () => {
+        if (showCode) return;    
+        const password = prompt("비밀번호를 입력하세요:");
+        if (password === 'xodnd') {
+            toggleCode();
+        } else {
+            alert("비밀번호를 다시 확인해주세요.");
+        }
+    };
+    
+
     // 과제 모달
     const closeModal = () => {
         setShowModal(false);
@@ -130,7 +141,7 @@ function MainPage() {
             <h1>{selected.name}</h1>
             <iframe src={selected.path} title={selected.title}></iframe>
             <button onClick={closeModal} className="modal-close">닫기</button>
-            <button onClick={toggleCode} className="code-show-btn">코드 확인하기</button>
+            <button onClick={toggleCodeWithPassword} className="code-show-btn">코드 확인하기</button>
 
             {/* 코드 확인 모달 */}
             {showCode && (
