@@ -48,7 +48,7 @@ nav ul{
 
 .content{
   width: 100%;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 140px);
   display: grid;
   place-content: center;
 }
