@@ -59,6 +59,6 @@ const iframeData = [
     { level: 3, module: "B", name: "리뷰 캐러셀", description: "이전, 다음, 랜덤 버튼이 포함된 리뷰 캐러셀 기능", path: "/Bmodule/reviewCarousel/index.html", title: "B-ReviewCarousel" },
     { level: 4, module: "B", name: "포켓몬 검색", description: "포켓몬 검색 기능 구현", path: "/Bmodule/search/index.html", title: "B-Search" },
     { level: 5, module: "B", name: "테트리스 게임", description: "테트리스 게임 기능 구현", path: "/Bmodule/tatris/index.html", title: "B-Tatris" }
-]
+];
 
 export default iframeData;
