@@ -175,6 +175,7 @@ iframe{
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  align-content: center;
 }
 
 .code-show-btn{
@@ -183,11 +184,12 @@ iframe{
   right: 105px;
   background-color: #111;
   color: #fff;
-  width: 150px;
+  padding: 0px 20px;
   height: 40px;
   font-size: 18px;
   cursor: pointer;
   border-radius: 5px;
+  align-content: center;
 }
 
 .code-area {
