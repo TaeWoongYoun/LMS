@@ -1,4 +1,3 @@
-// InsertPage.jsx
 import React, { useState } from 'react';
 import './InsertPage.css';
 
