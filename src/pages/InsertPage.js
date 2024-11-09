@@ -6,7 +6,8 @@ const InsertPage = () => {
   const [formData, setFormData] = useState({
     level: '',
     module: '',
-    name: '',
+    folderName: '', // 경로상에 사용될 폴더명
+    projectName: '', // 실제 프로젝트 표시될 이름
     description: '',
     htmlCode: '',
     cssCode: '',
@@ -18,7 +19,7 @@ const InsertPage = () => {
   const [success, setSuccess] = useState('');
 
   const validateForm = () => {
-    if (!formData.name.match(/^[a-zA-Z0-9-_]+$/)) {
+    if (!formData.folderName.match(/^[a-zA-Z0-9-_]+$/)) {
       setError('폴더명은 영문자, 숫자, 하이픈, 언더스코어만 사용할 수 있습니다.');
       return false;
     }
@@ -37,7 +38,6 @@ const InsertPage = () => {
       ...prevState,
       [name]: value
     }));
-    // 입력이 변경되면 에러와 성공 메시지를 초기화
     setError('');
     setSuccess('');
   };
@@ -55,16 +55,16 @@ const InsertPage = () => {
 
     try {
       const moduleFolder = `${formData.module}module`.toLowerCase();
-      const sanitizedName = formData.name.trim().toLowerCase();
+      const sanitizedFolderName = formData.folderName.trim().toLowerCase();
 
       const newData = {
         iframeData: {
           level: parseInt(formData.level),
           module: formData.module,
-          name: sanitizedName,
+          name: formData.projectName.trim(), // 프로젝트 표시 이름
           description: formData.description,
-          path: `/${moduleFolder}/${sanitizedName}`,
-          title: `${moduleFolder}-${sanitizedName}`
+          path: `/${moduleFolder}/${sanitizedFolderName}/index.html`,
+          title: `${moduleFolder}-${sanitizedFolderName}`
         },
         files: {
           html: formData.htmlCode,
@@ -91,7 +91,8 @@ const InsertPage = () => {
       setFormData({
         level: '',
         module: '',
-        name: '',
+        folderName: '',
+        projectName: '',
         description: '',
         htmlCode: '',
         cssCode: '',
@@ -145,15 +146,28 @@ const InsertPage = () => {
         </div>
 
         <div className="form-group">
-          <label>폴더명:</label>
+          <label>폴더명: (영문, 숫자, 하이픈, 언더스코어만 사용)</label>
           <input
             type="text"
-            name="name"
-            value={formData.name}
+            name="folderName"
+            value={formData.folderName}
             onChange={handleChange}
             required
             disabled={isLoading}
-            placeholder="영문, 숫자, 하이픈, 언더스코어만 사용 가능"
+            placeholder="예: button-hover, login-form"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>프로젝트 이름: (실제 표시될 이름)</label>
+          <input
+            type="text"
+            name="projectName"
+            value={formData.projectName}
+            onChange={handleChange}
+            required
+            disabled={isLoading}
+            placeholder="예: 호버 효과 버튼, 로그인 폼"
           />
         </div>
 
@@ -166,6 +180,7 @@ const InsertPage = () => {
             onChange={handleChange}
             required
             disabled={isLoading}
+            placeholder="예: hover 효과가 적용된 버튼 컴포넌트"
           />
         </div>
 
