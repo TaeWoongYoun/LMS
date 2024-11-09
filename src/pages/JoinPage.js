@@ -1,10 +1,65 @@
-import React from 'react';
+import React, { useState } from 'react';
+import axios from 'axios';
 
 function JoinPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const handleJoin = async (e) => {
+        e.preventDefault();
+
+        if (password !== confirmPassword) {
+            setError('비밀번호가 일치하지 않습니다.');
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:5000/api/register', { email, password });
+            setSuccess('회원가입이 완료되었습니다!');
+            setError('');
+        } catch (err) {
+            setError('회원가입에 실패했습니다.');
+        }
+    };
+
     return (
         <div>
             <h1>Join Page</h1>
-            <p>Welcome to the home page!</p>
+            <form onSubmit={handleJoin}>
+                <div>
+                    <label>Email: </label>
+                    <input 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        required 
+                    />
+                </div>
+                <div>
+                    <label>Password: </label>
+                    <input 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        required 
+                    />
+                </div>
+                <div>
+                    <label>Confirm Password: </label>
+                    <input 
+                        type="password" 
+                        value={confirmPassword} 
+                        onChange={(e) => setConfirmPassword(e.target.value)} 
+                        required 
+                    />
+                </div>
+                <button type="submit">Sign Up</button>
+            </form>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {success && <p style={{ color: 'green' }}>{success}</p>}
         </div>
     );
 }
