@@ -59,14 +59,18 @@ function MainPage() {
     };
 
     const toggleCodeWithPassword = () => {
-        if (showCode) return;    
+        if (showCode) return;
         const password = prompt("비밀번호를 입력하세요:");
+        if (password === null) {
+            return;
+        }
         if (password === 'xodnd') {
             toggleCode();
         } else {
             alert("비밀번호를 다시 확인해주세요.");
         }
     };
+    
     
 
     // 과제 모달
