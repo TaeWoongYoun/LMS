@@ -9,15 +9,20 @@ function LoginPage() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setError('');
+        setSuccess('');
 
         try {
-            const response = await axios.post('http://localhost:5000/server.js', { email, password });
+            const response = await axios.post('http://localhost:3001/api/login', { 
+                email, 
+                password 
+            });
+            
             setSuccess('로그인 성공');
-            setError('');
-            localStorage.setItem('token', response.data.token); // JWT 토큰 저장
+            localStorage.setItem('token', response.data.token);
         } catch (err) {
-            setError('이메일 또는 비밀번호가 잘못되었습니다.');
-            setSuccess('');
+            console.error('Login error:', err.response?.data || err.message);
+            setError(err.response?.data || '로그인에 실패했습니다.');
         }
     };
 

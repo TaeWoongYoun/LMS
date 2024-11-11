@@ -17,7 +17,7 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/api/register', { email, password });
+            const response = await axios.post('http://localhost:3001/api/register', { email, password });
             console.log(response);
             setSuccess('회원가입이 완료되었습니다!');
             setError('');

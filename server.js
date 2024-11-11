@@ -11,12 +11,7 @@ const app = express();
 const port = 3001;
 
 // MySQL 데이터베이스 연결 설정
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'User'
-});
+const db = mysql.createConnection({ host: 'localhost', user: 'root', password: '', database: 'User' });
 
 // 데이터베이스 연결을 시도합니다.
 db.connect((err) => {
@@ -25,6 +20,11 @@ db.connect((err) => {
         return;
     }
     console.log('데이터베이스 연결 성공');
+});
+
+// 서버 실행
+app.listen(port, () => {
+    console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
 });
 
 // CORS 허용을 위해 cors 미들웨어 사용
@@ -75,43 +75,74 @@ async function appendToIframeDataFile(newData) {
 }
 
 // 회원가입 API
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', (req, res) => {
     const { email, password } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
-    db.query(query, [email, hashedPassword], (err, result) => {
+    // 비밀번호를 해시화
+    bcrypt.hash(password, 10, (err, hashedPassword) => {
         if (err) {
-            console.error('회원가입 오류:', err);
+            console.error('비밀번호 해시화 오류:', err);
             return res.status(500).send('서버 오류');
         }
-        res.status(200).send('회원가입 성공');
+
+        // 해시된 비밀번호를 DB에 저장
+        const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
+        db.query(query, [email, hashedPassword], (err, result) => {
+            if (err) {
+                console.error('회원가입 오류:', err);
+                return res.status(500).send('서버 오류');
+            }
+            res.status(200).send('회원가입 성공');
+        });
     });
 });
 
 // 로그인 API
 app.post('/api/login', (req, res) => {
     const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
 
     const query = 'SELECT * FROM users WHERE email = ?';
-    db.query(query, [email], async (err, result) => {
+    db.query(query, [email], (err, result) => {
         if (err) {
-            console.error('로그인 오류:', err);
+            console.error('로그인 DB 조회 오류:', err);
             return res.status(500).send('서버 오류');
         }
 
         if (result.length === 0) {
+            console.log('사용자를 찾을 수 없음:', email);
             return res.status(401).send('이메일 또는 비밀번호가 잘못되었습니다.');
         }
 
-        const isMatch = await bcrypt.compare(password, result[0].password);
-        if (!isMatch) {
-            return res.status(401).send('이메일 또는 비밀번호가 잘못되었습니다.');
-        }
+        console.log('사용자 찾음, 비밀번호 검증 시작');
+        // 저장된 해시된 비밀번호 로깅 (실제 운영환경에서는 제거해야 함)
+        console.log('DB에 저장된 해시:', result[0].password);
+        
+        bcrypt.compare(password, result[0].password, (err, isMatch) => {
+            if (err) {
+                console.error('비밀번호 비교 오류:', err);
+                return res.status(500).send('서버 오류');
+            }
 
-        const token = jwt.sign({ id: result[0].id, email: result[0].email }, 'your_jwt_secret', { expiresIn: '1h' });
-        res.status(200).json({ token });
+            console.log('비밀번호 검증 결과:', isMatch);
+
+            if (!isMatch) {
+                return res.status(401).send('이메일 또는 비밀번호가 잘못되었습니다.');
+            }
+
+            // 비밀번호가 일치하면 JWT 토큰 생성
+            const token = jwt.sign(
+                { 
+                    id: result[0].id, 
+                    email: result[0].email 
+                }, 
+                'your_jwt_secret', 
+                { expiresIn: '1h' }
+            );
+            
+            console.log('로그인 성공, 토큰 생성됨');
+            res.status(200).json({ token });
+        });
     });
 });
 
@@ -159,9 +190,4 @@ app.post('/api/save-module', async (req, res) => {
 // 기본 라우트 처리 ("/" 경로)
 app.get('/', (req, res) => {
     res.send('Hello, World!');
-});
-
-// 서버 실행
-app.listen(port, () => {
-    console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
 });
