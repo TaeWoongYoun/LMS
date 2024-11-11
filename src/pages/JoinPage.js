@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './styles/AuthStyle.css'
 
 function JoinPage() {
     const [email, setEmail] = useState('');
@@ -27,9 +28,9 @@ function JoinPage() {
     };
 
     return (
-        <div>
-            <h1>Join Page</h1>
+        <div className='main-area'>
             <form onSubmit={handleJoin}>
+                <h1>회원가입</h1>
                 <div>
                     <label>Email: </label>
                     <input 

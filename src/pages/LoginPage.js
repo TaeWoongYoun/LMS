@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './styles/AuthStyle.css'
 
 function LoginPage() {
     const [email, setEmail] = useState('');
@@ -27,9 +28,9 @@ function LoginPage() {
     };
 
     return (
-        <div>
-            <h1>Login Page</h1>
+        <div className='main-area'>
             <form onSubmit={handleLogin}>
+                <h1>로그인</h1>
                 <div>
                     <label>Email: </label>
                     <input 

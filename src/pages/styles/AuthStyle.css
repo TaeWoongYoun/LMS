@@ -1,0 +1,90 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.main-area {
+    width: 100%;
+    height: calc(100vh - 140px);
+    position: relative;
+}
+
+.main-area form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 500px;
+}
+
+.main-area form h1{
+    padding-bottom: 15px;
+}
+
+.main-area form div {
+    margin-bottom: 25px;
+}
+
+.main-area label {
+    text-align: left;
+    font-size: 18px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.main-area input {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.main-area input[type="email"]:focus,
+.main-area input[type="password"]:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+.main-area button {
+    background-color: #007bff;
+    color: white;
+    padding: 18px 30px;
+    font-size: 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.main-area button:hover {
+    background-color: #0056b3;
+}
+
+.main-area button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.main-area p {
+    text-align: center;
+    font-size: 18px;
+}
+
+.main-area p.red {
+    color: red;
+}
+
+.main-area p.green {
+    color: green;
+}
