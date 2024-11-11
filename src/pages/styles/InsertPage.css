@@ -2,10 +2,21 @@ textarea{
     resize: none;
 }
 
+.main-container{
+    width: 1000px;
+    margin: 0 auto;
+}
+
 .insert-page-container {
     max-width: 1000px;
-    margin: 0 auto;
     padding: 20px;
+    margin: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.insert-page-container h1{
+    padding: 15px;
 }
 
 .module-form {
@@ -22,15 +33,24 @@ textarea{
 
 .module-form .form-group label {
     font-weight: bold;
+    text-align: left;
+    margin-bottom: 10px;
 }
 
 .module-form .form-group input,
 .module-form .form-group select,
 .module-form .form-group textarea {
-    padding: 8px;
+    padding: 12px;
     border: 1px solid #111;
     border-radius: 4px;
     font-size: 14px;
+}
+
+.module-form .form-group input:focus,
+.module-form .form-group select:focus,
+.module-form .form-group textarea:focus{
+    border-color: #007bff;
+    outline: none;
 }
 
 .module-form .form-group textarea {
@@ -46,6 +66,10 @@ textarea{
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
+}
+
+.module-form button:hover{
+    background-color: #0056b3;
 }
 
 .module-form button:disabled {
