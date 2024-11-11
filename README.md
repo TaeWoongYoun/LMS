@@ -40,6 +40,9 @@ git clone https://github.com/TaeWoongYoun/react-start.git
 cd react-start
 npm install
 npm start
+
+디렉토리 삭제:
+rmdir /s /q react-start
 ```
 
 ## 기술 스택
