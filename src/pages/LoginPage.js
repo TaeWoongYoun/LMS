@@ -23,7 +23,11 @@ function LoginPage() {
             
             setSuccess('로그인 성공');
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('userName', response.data.name); // 사용자 이름 저장
+            localStorage.setItem('userName', response.data.name);
+            
+            // 로그인 상태 변경 이벤트 발생
+            window.dispatchEvent(new Event('loginChange'));
+            
             navigate('/');
         } catch (err) {
             console.error('Login error:', err.response?.data || err.message);

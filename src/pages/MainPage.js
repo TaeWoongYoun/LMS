@@ -88,15 +88,21 @@ function MainPage() {
 
     useEffect(() => {
         const storedName = localStorage.getItem('userName');
-        if (storedName) {
-            setUserName(storedName);
-        }
+        setUserName(storedName || '');
+        const handleLoginChange = () => {
+            const storedName = localStorage.getItem('userName');
+            setUserName(storedName || '');
+        };
+        window.addEventListener('loginChange', handleLoginChange);
+        return () => {
+            window.removeEventListener('loginChange', handleLoginChange);
+        };
     }, []);
 
     return (
     <div className="main-page">
         <div className="content">
-            <h1>"{userName}" 환영합니다</h1>
+            <h1>{userName ? `${userName}님 환영합니다` : '로그인이 필요합니다'}</h1>
             {/* 난이도/모듈 선택 및 과제 검색 */}
             <div className='search-area'>
                 <div>
