@@ -49,7 +49,7 @@
     margin-top: 8px;
 }
 
-.main-area input[type="email"]:focus,
+.main-area input[type="text"]:focus,
 .main-area input[type="password"]:focus {
     border-color: #007bff;
     outline: none;
