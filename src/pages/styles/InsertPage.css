@@ -50,6 +50,7 @@ textarea{
 .module-form .form-group select:focus,
 .module-form .form-group textarea:focus{
     border-color: #007bff;
+    border-width: 2px;
     outline: none;
 }
 

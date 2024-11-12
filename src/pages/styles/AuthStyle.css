@@ -53,6 +53,7 @@
 .main-area input[type="password"]:focus {
     border-color: #007bff;
     outline: none;
+    border-width: 2px;
 }
 
 .main-area button {
