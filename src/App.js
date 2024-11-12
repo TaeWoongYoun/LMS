@@ -21,7 +21,7 @@ function App() {
           <Route path='/insert' element={<InsertPage />} />
           <Route path='/login' element={<LoginPage />} />
           <Route path='/join' element={<JoinPage />} />
-          <Route path='/data' element={<DeletePage />} />
+          <Route path='/delete' element={<DeletePage />} />
         </Routes>
         <Footer />
       </Router>
