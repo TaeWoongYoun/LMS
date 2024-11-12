@@ -57,7 +57,8 @@ const iframeData = [
   { level: 2, module: "B", name: "파일 업로드 표시", description: "내 컴퓨터의 파일을 업로드하여 화면에 표시", path: "/Bmodule/loadFile/index.html", title: "B-LoadFile"},
   { level: 1, module: "B", name: "모달창", description: "함수를 사용한 모달창 구현", path: "/Bmodule/modal/index.html", title: "B-Modal"},
   { level: 3, module: "B", name: "리뷰 캐러셀", description: "이전, 다음, 랜덤 버튼이 포함된 리뷰 캐러셀 기능", path: "/Bmodule/reviewCarousel/index.html", title: "B-ReviewCarousel"},
-  { level: 4, module: "B", name: "포켓몬 검색", description: "포켓몬 검색 기능 구현", path: "/Bmodule/search/index.html", title: "B-Search"}
+  { level: 4, module: "B", name: "포켓몬 검색", description: "포켓몬 검색 기능 구현", path: "/Bmodule/search/index.html", title: "B-Search"},
+  { level: 5, module: "B", name: "테트리스", description: "테트리스 게임 제작", path: "/Bmodule/tatris/index.html", title: "B-Tatris"}
 ];
 
 export default iframeData;

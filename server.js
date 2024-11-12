@@ -162,7 +162,7 @@ app.post('/api/save-module', async (req, res) => {
     await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
     await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
     if (files.js) {
-        await fs.writeFile(path.join(moduleDir, 'script.js'), files.js, 'utf8');
+        await fs.writeFile(path.join(moduleDir, 'index.js'), files.js, 'utf8');
     }
 
     await appendToIframeDataFile({
@@ -181,109 +181,40 @@ app.post('/api/save-module', async (req, res) => {
 });
 
 // 모듈 삭제 API
-// 모듈 삭제 API
 app.delete('/api/delete-module', async (req, res) => {
     const { path: modulePath, name } = req.body;
-
-    if (!modulePath || !name) {
-        return res.status(400).json({ 
-            error: '모듈 경로와 이름은 필수 항목입니다.' 
-        });
-    }
-
+    
     try {
-        // 1. iframeData.js 수정
-        // 프로젝트 루트 디렉토리 기준으로 경로 설정
-        const projectRoot = path.join(__dirname, '..');  // 서버 폴더의 상위 디렉토리로 이동
+        // 1. 디렉토리째로 삭제 (파일별 삭제가 아닌 폴더 전체 삭제)
+        const projectRoot = path.join(__dirname, '..');
+        const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
+        const parentDir = path.dirname(moduleDir); // 상위 디렉토리 경로 가져오기
+        await fs.rm(parentDir, { recursive: true, force: true });
+
+        // 2. iframeData.js 수정
         const iframeDataPath = path.join(projectRoot, 'react-start', 'src', 'data', 'iframeData.js');
+        let content = await fs.readFile(iframeDataPath, 'utf8');
         
-        console.log('처리되는 파일 경로:', iframeDataPath); // 디버깅용 로그
+        // 정규식을 사용하여 정확한 객체 찾기
+        const regex = new RegExp(`\\{[^}]*name:\\s*"${name}"[^}]*\\}`, 'g');
+        content = content.replace(regex, '');
+        
+        // 연속된 쉼표 정리
+        content = content.replace(/,\s*,/g, ',');
+        // 배열 시작 부분의 쉼표 정리
+        content = content.replace(/\[\s*,/, '[');
+        // 배열 끝 부분의 쉼표 정리
+        content = content.replace(/,\s*\]/, ']');
+        
+        // 줄바꿈 정리
+        content = content.replace(/\n\s*\n/g, '\n');
+        
+        await fs.writeFile(iframeDataPath, content, 'utf8');
 
-        // 파일 존재 확인
-        try {
-            await fs.access(iframeDataPath, fs.constants.R_OK | fs.constants.W_OK);
-        } catch (error) {
-            console.error('파일 접근 오류:', error);
-            return res.status(500).json({ 
-                error: 'iframeData.js 파일에 접근할 수 없습니다.',
-                details: error.message,
-                path: iframeDataPath
-            });
-        }
-
-        // 파일 읽기
-        let content;
-        try {
-            content = await fs.readFile(iframeDataPath, 'utf8');
-        } catch (error) {
-            console.error('파일 읽기 오류:', error);
-            return res.status(500).json({ 
-                error: 'iframeData.js 파일을 읽을 수 없습니다.',
-                details: error.message 
-            });
-        }
-
-        // 데이터 구문 분석 및 수정
-        try {
-            const startIndex = content.indexOf('const iframeData = [');
-            const endIndex = content.lastIndexOf('];');
-            
-            if (startIndex === -1 || endIndex === -1) {
-                throw new Error('파일 형식이 올바르지 않습니다.');
-            }
-
-            let dataArray = content.slice(startIndex + 20, endIndex);
-            const items = dataArray
-                .split('},')
-                .map(item => item.trim() + (item.trim().endsWith('}') ? '' : '}'));
-            
-            const filteredItems = items.filter(item => !item.includes(`name: "${name}"`));
-            
-            if (filteredItems.length === items.length) {
-                return res.status(404).json({ 
-                    error: '삭제할 모듈을 찾을 수 없습니다.' 
-                });
-            }
-
-            const newContent = 
-                'const iframeData = [\n  ' + 
-                filteredItems.join(',\n  ') +
-                '\n];\n\nexport default iframeData;';
-
-            await fs.writeFile(iframeDataPath, newContent, 'utf8');
-
-            // 2. 실제 모듈 파일 삭제 (옵션)
-            if (modulePath) {
-                const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
-                try {
-                    const stats = await fs.stat(moduleDir);
-                    if (stats.isDirectory()) {
-                        await fs.rm(moduleDir, { recursive: true, force: true });
-                    }
-                } catch (error) {
-                    console.log('모듈 디렉토리 삭제 중 오류 (무시됨):', error);
-                    // 디렉토리 삭제 실패는 전체 프로세스를 중단시키지 않음
-                }
-            }
-
-        } catch (error) {
-            console.error('데이터 처리 오류:', error);
-            return res.status(500).json({ 
-                error: 'iframeData.js 파일 처리 중 오류가 발생했습니다.',
-                details: error.message 
-            });
-        }
-
-        res.status(200).json({ 
-            message: '모듈이 성공적으로 삭제되었습니다.' 
-        });
-
+        res.status(200).json({ message: '삭제 완료' });
     } catch (error) {
-        console.error('전체 프로세스 오류:', error);
-        res.status(500).json({ 
-            error: '모듈 삭제 중 오류가 발생했습니다.',
-            details: error.message 
-        });
+        console.error('삭제 중 오류:', error);
+        res.status(500).json({ error: '삭제 실패' });
     }
 });
 
