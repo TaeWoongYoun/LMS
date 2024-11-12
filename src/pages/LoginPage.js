@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './styles/AuthStyle.css'
+import './styles/AuthStyle.css';
 
 function LoginPage() {
-    const [email, setEmail] = useState('');
+    const [id, setId] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -15,8 +15,8 @@ function LoginPage() {
 
         try {
             const response = await axios.post('http://localhost:3001/api/login', { 
-                email, 
-                password 
+                id, 
+                pw: password 
             });
             
             setSuccess('로그인 성공');
@@ -32,11 +32,11 @@ function LoginPage() {
             <form onSubmit={handleLogin}>
                 <h1>로그인</h1>
                 <div>
-                    <label>Email: </label>
+                    <label>ID: </label>
                     <input 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
+                        type="text" 
+                        value={id} 
+                        onChange={(e) => setId(e.target.value)} 
                         required 
                     />
                 </div>

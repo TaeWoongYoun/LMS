@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './styles/AuthStyle.css'
+import './styles/AuthStyle.css';
 
 function JoinPage() {
-    const [email, setEmail] = useState('');
+    const [id, setId] = useState('');
+    const [name, setName] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
@@ -18,7 +19,7 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://localhost:3001/api/register', { email, password });
+            const response = await axios.post('http://localhost:3001/api/register', { id, pw: password, name });
             console.log(response);
             setSuccess('회원가입이 완료되었습니다!');
             setError('');
@@ -32,11 +33,20 @@ function JoinPage() {
             <form onSubmit={handleJoin}>
                 <h1>회원가입</h1>
                 <div>
-                    <label>Email: </label>
+                    <label>ID: </label>
                     <input 
-                        type="email" 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
+                        type="text" 
+                        value={id} 
+                        onChange={(e) => setId(e.target.value)} 
+                        required 
+                    />
+                </div>
+                <div>
+                    <label>Name: </label>
+                    <input 
+                        type="text" 
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)} 
                         required 
                     />
                 </div>

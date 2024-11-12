@@ -11,7 +11,7 @@ const app = express();
 const port = 3001;
 
 // MySQL 데이터베이스 연결 설정
-const db = mysql.createConnection({ host: 'localhost', user: 'root', password: '', database: 'User' });
+const db = mysql.createConnection({ host: 'localhost', user: 'root', password: '', database: 'LMS' });
 
 // 데이터베이스 연결을 시도합니다.
 db.connect((err) => {
@@ -76,72 +76,61 @@ async function appendToIframeDataFile(newData) {
 
 // 회원가입 API
 app.post('/api/register', (req, res) => {
-    const { email, password } = req.body;
+    const { id, pw, name } = req.body;
 
     // 비밀번호를 해시화
-    bcrypt.hash(password, 10, (err, hashedPassword) => {
+    bcrypt.hash(pw, 10, (err, hashedPassword) => {
         if (err) {
-            console.error('비밀번호 해시화 오류:', err);
-            return res.status(500).send('서버 오류');
+            console.error('비밀번호 해시 중 오류 발생:', err);
+            return res.status(500).json({ error: '비밀번호 처리 중 오류가 발생했습니다.' });
         }
 
-        // 해시된 비밀번호를 DB에 저장
-        const query = 'INSERT INTO users (email, password) VALUES (?, ?)';
-        db.query(query, [email, hashedPassword], (err, result) => {
+        // 새 사용자 추가
+        const sql = 'INSERT INTO user (id, pw, name) VALUES (?, ?, ?)';
+        db.query(sql, [id, hashedPassword, name], (err, result) => {
             if (err) {
-                console.error('회원가입 오류:', err);
-                return res.status(500).send('서버 오류');
+                console.error('사용자 추가 중 오류 발생:', err);
+                return res.status(500).json({ error: '사용자 추가 중 오류가 발생했습니다.' });
             }
-            res.status(200).send('회원가입 성공');
+
+            res.status(201).json({ message: '회원가입 성공' });
         });
     });
 });
 
 // 로그인 API
 app.post('/api/login', (req, res) => {
-    const { email, password } = req.body;
-    console.log('Login attempt for email:', email);
+    const { id, pw } = req.body;
 
-    const query = 'SELECT * FROM users WHERE email = ?';
-    db.query(query, [email], (err, result) => {
+    // 사용자 조회
+    const sql = 'SELECT * FROM user WHERE id = ?';
+    db.query(sql, [id], (err, results) => {
         if (err) {
-            console.error('로그인 DB 조회 오류:', err);
-            return res.status(500).send('서버 오류');
+            console.error('사용자 조회 중 오류 발생:', err);
+            return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
         }
 
-        if (result.length === 0) {
-            console.log('사용자를 찾을 수 없음:', email);
-            return res.status(401).send('이메일 또는 비밀번호가 잘못되었습니다.');
+        if (results.length === 0) {
+            return res.status(401).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
         }
 
-        console.log('사용자 찾음, 비밀번호 검증 시작');
-        // 저장된 해시된 비밀번호 로깅 (실제 운영환경에서는 제거해야 함)
-        console.log('DB에 저장된 해시:', result[0].password);
-        
-        bcrypt.compare(password, result[0].password, (err, isMatch) => {
+        const user = results[0];
+
+        // 비밀번호 확인
+        bcrypt.compare(pw, user.pw, (err, isMatch) => {
             if (err) {
-                console.error('비밀번호 비교 오류:', err);
-                return res.status(500).send('서버 오류');
+                console.error('비밀번호 확인 중 오류 발생:', err);
+                return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
             }
-
-            console.log('비밀번호 검증 결과:', isMatch);
 
             if (!isMatch) {
-                return res.status(401).send('이메일 또는 비밀번호가 잘못되었습니다.');
+                return res.status(401).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
             }
 
-            // 비밀번호가 일치하면 JWT 토큰 생성
-            const token = jwt.sign(
-                { 
-                    id: result[0].id, 
-                    email: result[0].email 
-                }, 
-                'your_jwt_secret', 
-                { expiresIn: '1h' }
-            );
-            
-            console.log('로그인 성공, 토큰 생성됨');
-            res.status(200).json({ token });
+            // JWT 생성
+            const token = jwt.sign({ id: user.id, name: user.name }, 'your_jwt_secret', { expiresIn: '1h' });
+
+            res.status(200).json({ message: '로그인 성공', token });
         });
     });
 });
