@@ -130,7 +130,11 @@ app.post('/api/login', (req, res) => {
             // JWT 생성
             const token = jwt.sign({ id: user.id, name: user.name }, 'your_jwt_secret', { expiresIn: '1h' });
 
-            res.status(200).json({ message: '로그인 성공', token });
+            res.status(200).json({ 
+                message: '로그인 성공', 
+                token,
+                name: user.name  // 사용자 이름도 함께 전송
+            });
         });
     });
 });

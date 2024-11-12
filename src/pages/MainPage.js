@@ -12,6 +12,7 @@ function MainPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState('');
+    const [userName, setUserName] = useState('');
 
     // 코드 에디터 효과
     useEffect(() => {
@@ -71,8 +72,6 @@ function MainPage() {
         }
     };
     
-    
-
     // 과제 모달
     const closeModal = () => {
         setShowModal(false);
@@ -87,9 +86,17 @@ function MainPage() {
         return matchesSearch && matchesLevel && matchesModule;
     });
 
+    useEffect(() => {
+        const storedName = localStorage.getItem('userName');
+        if (storedName) {
+            setUserName(storedName);
+        }
+    }, []);
+
     return (
     <div className="main-page">
         <div className="content">
+            <h1>"{userName}" 환영합니다</h1>
             {/* 난이도/모듈 선택 및 과제 검색 */}
             <div className='search-area'>
                 <div>

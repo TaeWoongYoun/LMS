@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './styles/AuthStyle.css';
 
@@ -7,12 +8,13 @@ function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
         setSuccess('');
-
+    
         try {
             const response = await axios.post('http://localhost:3001/api/login', { 
                 id, 
@@ -21,9 +23,11 @@ function LoginPage() {
             
             setSuccess('로그인 성공');
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userName', response.data.name); // 사용자 이름 저장
+            navigate('/');
         } catch (err) {
             console.error('Login error:', err.response?.data || err.message);
-            setError(err.response?.data || '로그인에 실패했습니다.');
+            setError(err.response?.data?.error || '로그인에 실패했습니다.');
         }
     };
 
