@@ -66,7 +66,7 @@ function Header() {
                         </>
                     ) : loginStatus === 'admin' ? (
                         <>
-                            <li><Link to="/data">Data</Link></li> {/* admin 전용 메뉴 */}
+                            <li><Link to="/delete">Delete</Link></li> {/* admin 전용 메뉴 */}
                             <li><Link to="/user">User</Link></li> {/* admin 전용 메뉴 */}
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                         </>
