@@ -7,20 +7,16 @@ function Header() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // 초기 로그인 상태 확인
         const token = localStorage.getItem('token');
         setIsLoggedIn(!!token);
 
-        // 로그인 상태 변경 이벤트 리스너
         const handleLoginChange = () => {
             const token = localStorage.getItem('token');
             setIsLoggedIn(!!token);
         };
 
-        // 이벤트 리스너 등록
         window.addEventListener('loginChange', handleLoginChange);
 
-        // 컴포넌트 언마운트 시 이벤트 리스너 제거
         return () => {
             window.removeEventListener('loginChange', handleLoginChange);
         };
@@ -30,7 +26,6 @@ function Header() {
         localStorage.removeItem('token');
         localStorage.removeItem('userName');
         setIsLoggedIn(false);
-        // 로그아웃 이벤트 발생
         window.dispatchEvent(new Event('loginChange'));
         navigate('/');
     };
@@ -43,7 +38,6 @@ function Header() {
             <nav>
                 <ul>
                     <li><Link to="/">Home</Link></li>
-                    <li><Link to="/insert">Insert</Link></li>
                     <li><Link to="/welcome">Welcome</Link></li>
                     {!isLoggedIn ? (
                         <>
@@ -53,6 +47,7 @@ function Header() {
                     ) : (
                         <>
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
+                            <li><Link to="/insert">Insert</Link></li>
                         </>
                     )}
                 </ul>
