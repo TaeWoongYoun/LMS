@@ -15,3 +15,13 @@
     overflow-y: scroll;
     font-size: 20px;
 }
+
+.user-area button{
+    padding: 5px 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+}
