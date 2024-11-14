@@ -1,0 +1,17 @@
+.user-area{
+    width: 100%;
+    height: calc(100vh - 140px);
+    display: grid;
+    place-content: center;
+}
+
+.user-area h1{
+    padding-bottom: 50px;
+}
+
+.user-area table{
+    width: 1440px;
+    max-height: 650px;
+    overflow-y: scroll;
+    font-size: 20px;
+}
