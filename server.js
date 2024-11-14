@@ -218,6 +218,18 @@ app.delete('/api/delete-module', async (req, res) => {
     }
 });
 
+// server.js에 추가
+app.get('/api/users', (req, res) => {
+    const sql = 'SELECT idx, id, name FROM user WHERE id != "admin"';
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('사용자 조회 중 오류 발생:', err);
+            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
+        }
+        res.json(results);
+    });
+});
+
 // 기본 라우트 처리 ("/" 경로)
 app.get('/', (req, res) => {
     res.send('Hello, World!');

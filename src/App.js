@@ -8,6 +8,7 @@ import Header from './components/Header.js';
 import Footer from './components/Footer.js';
 import MainPage from './pages/MainPage.js';
 import DeletePage from './pages/DeletePage.js';
+import UserPage from './pages/UserPage.js';
 import 'prismjs/themes/prism-tomorrow.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path='/login' element={<LoginPage />} />
           <Route path='/join' element={<JoinPage />} />
           <Route path='/delete' element={<DeletePage />} />
+          <Route path='/user' element={<UserPage />} />
         </Routes>
         <Footer />
       </Router>
