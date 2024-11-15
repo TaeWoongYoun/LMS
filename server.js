@@ -11,7 +11,12 @@ const app = express();
 const port = 3001;
 
 // MySQL 데이터베이스 연결 설정
-const db = mysql.createConnection({ host: 'localhost', user: 'root', password: '', database: 'LMS' });
+const db = mysql.createConnection({ 
+    host: 'localhost', 
+    user: 'root', 
+    password: '', 
+    database: 'LMS' 
+});
 
 // 데이터베이스 연결을 시도합니다.
 db.connect((err) => {
@@ -218,18 +223,7 @@ app.delete('/api/delete-module', async (req, res) => {
     }
 });
 
-app.get('/api/users', (req, res) => {
-    const sql = 'SELECT idx, id, name FROM user WHERE id != "admin"';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('사용자 조회 중 오류 발생:', err);
-            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
-        }
-        res.json(results);
-    });
-});
-
-// 사용자 조회 API 수정 - role 정보 포함
+// 사용자 조회 API (role 포함)
 app.get('/api/users', (req, res) => {
     const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
     db.query(sql, (err, results) => {
@@ -241,7 +235,7 @@ app.get('/api/users', (req, res) => {
     });
 });
 
-// 사용자 권한 변경 API 추가
+// 사용자 권한 변경 API
 app.put('/api/users/:idx/role', (req, res) => {
     const userIdx = req.params.idx;
     const { role } = req.body;
@@ -266,7 +260,38 @@ app.put('/api/users/:idx/role', (req, res) => {
     });
 });
 
-// 기본 라우트 처리 ("/" 경로)
+// 사용자 조회 API (role 포함)
+app.get('/api/users', (req, res) => {
+    const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('사용자 조회 중 오류 발생:', err);
+            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
+        }
+        res.json(results);
+    });
+});
+
+// 사용자 삭제 API 추가
+app.delete('/api/users/:idx', (req, res) => {
+    const userIdx = req.params.idx;
+    
+    const sql = 'DELETE FROM user WHERE idx = ? AND id != "admin"';
+    db.query(sql, [userIdx], (err, result) => {
+        if (err) {
+            console.error('사용자 삭제 중 오류 발생:', err);
+            return res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
+        }
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+        }
+        
+        res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
+    });
+});
+
+// 기본 라우트 처리
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
