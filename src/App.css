@@ -118,7 +118,8 @@ th{
 }
 
 tr:hover{
-  background-color: turquoise;
+  cursor: pointer;
+  background-color: #eee;
 }
 
 th, td{
@@ -283,4 +284,211 @@ address{
   filter: grayscale(50%);
   width: 50px;
   height: 50px;
+}
+
+.table-area .preview-btn, .table-area .submit-btn{
+  padding: 5px 10px;
+  font-size: 18px;
+  margin: 5px;
+  border-radius: 5px;
+  border: none;
+}
+
+.table-area .preview-btn{
+  background-color: #007bff;
+  color: #fff;
+}
+
+.table-area .preview-btn:hover{
+  background-color: #0056b3;
+}
+
+.table-area .submit-btn{
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+.table-area .submit-btn:hover{
+  background-color:  #45a049;
+}
+
+/* MainPage.css에 추가 */
+.submit-modal {
+  width: 100%;
+  max-width: 500px !important;
+  padding: 40px !important;
+  position: relative;
+  background-color: #fff;
+  border-radius: 12px !important;
+  box-shadow: 0 0px 15px rgba(0, 0, 0, 0.3);
+}
+
+.submit-modal h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+}
+
+.submit-modal .form-group {
+  margin-bottom: 25px;
+}
+
+.submit-modal .form-group label {
+  text-align: left;
+  font-size: 18px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.submit-modal .form-group input,
+.submit-modal .form-group textarea {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 8px;
+  align-content: center;
+}
+
+.submit-modal .disabled-input {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.submit-modal .button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.submit-modal .submit-button,
+.submit-modal .cancel-button {
+  flex: 1;
+  padding: 18px 30px;
+  font-size: 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.submit-modal .submit-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.submit-modal .submit-button:hover {
+  background-color: #0056b3;
+}
+
+.submit-modal .cancel-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.submit-modal .cancel-button:hover {
+  background-color: #c82333;
+}
+
+.submit-modal .preview-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.submit-modal .preview-button:hover {
+  background-color: #45a049;
+}
+
+.submit-modal .error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.submit-modal .success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* 이미지 미리보기 모달 스타일 */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.modal-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 16px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  background-color: #cc0000;
+}
+
+/* 파일 입력 스타일링 */
+.submit-modal input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.submit-modal input[type="file"]::file-selector-button {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.submit-modal input[type="file"]::file-selector-button:hover {
+  background-color: #5a6268;
 }

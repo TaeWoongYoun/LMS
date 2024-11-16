@@ -297,7 +297,7 @@ function MainPage() {
                                                     미리보기
                                                 </button>
                                                 {!completedAssignments.includes(item.name) && 
-                                                 !submittedAssignments.includes(item.name) && (
+                                                    !submittedAssignments.includes(item.name) && (
                                                     <button 
                                                         className="submit-btn"
                                                         onClick={(e) => handleSubmitClick(item, e)}

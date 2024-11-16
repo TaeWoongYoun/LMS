@@ -15,6 +15,7 @@
 
 .check-page .table-container {
     overflow-x: auto;
+    font-size: 20px;
 }
 
 .check-page table {
@@ -39,6 +40,7 @@
     color: white;
     border: none;
     border-radius: 4px;
+    font-size: 18px;
     cursor: pointer;
 }
 
@@ -97,9 +99,25 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 18px;
     margin-left: 8px;
 }
 
 .check-page .check-btn:hover {
     background-color: #45a049;
+}
+
+.check-page .preview-btn{
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 8px;
+}
+
+.check-page .preview-btn:hover{
+    background-color: #0056b3;
 }
