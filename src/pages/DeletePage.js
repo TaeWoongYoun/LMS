@@ -6,10 +6,24 @@ function DataPage() {
     const [searchTerm, setSearchTerm] = useState(''); 
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState(''); 
-    const [userName, setUserName] = useState(''); 
+    const [userRole, setUserRole] = useState('');
     const [data, setData] = useState(iframeData);
 
-    // 데이터 삭제 처리
+    useEffect(() => {
+        const storedRole = localStorage.getItem('userRole');
+        setUserRole(storedRole || '');
+        
+        const handleLoginChange = () => {
+            const storedRole = localStorage.getItem('userRole');
+            setUserRole(storedRole || '');
+        };
+        
+        window.addEventListener('loginChange', handleLoginChange);
+        return () => {
+            window.removeEventListener('loginChange', handleLoginChange);
+        };
+    }, []);
+
     const handleDelete = async (item) => {
         if (window.confirm('정말로 이 데이터를 삭제하시겠습니까?')) {
             try {
@@ -25,52 +39,30 @@ function DataPage() {
                 });
 
                 if (response.ok) {
-                    // 성공적으로 삭제되면 현재 상태에서도 해당 항목 제거
                     setData(prevData => prevData.filter(dataItem => dataItem.path !== item.path));
                     alert('성공적으로 삭제되었습니다.');
                 } else {
                     alert('삭제 중 오류가 발생했습니다.');
                 }
             } catch (error) {
-                console.error('Error:', error);
                 alert('삭제 중 오류가 발생했습니다.');
             }
         }
     };
 
-    // 데이터 필터링
     const filteredData = data.filter(item => {
         const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesLevel = selectedLevel ? item.level === parseInt(selectedLevel) : true;
         const matchesModule = selectedModule ? item.module === selectedModule : true;
-
         return matchesSearch && matchesLevel && matchesModule;
     });
-
-    // 사용자 이름 로드 및 로그인 상태 변경 처리
-    useEffect(() => {
-        const storedName = localStorage.getItem('userName');
-        setUserName(storedName || '');
-        const handleLoginChange = () => {
-            const storedName = localStorage.getItem('userName');
-            setUserName(storedName || '');
-        };
-        window.addEventListener('loginChange', handleLoginChange);
-        return () => {
-            window.removeEventListener('loginChange', handleLoginChange);
-        };
-    }, []);
-
-    // admin 계정 확인
-    const isAdmin = userName === 'admin';
 
     return (
         <div className="data-page">
             <div className="content">
-                {isAdmin ? (
+                {userRole === 'admin' ? (
                     <>
                         <h1>데이터 관리</h1>
-                        {/* 검색 및 필터링 영역 */}
                         <div className='search-area'>
                             <div>
                                 <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
@@ -96,7 +88,6 @@ function DataPage() {
                             />
                         </div>
 
-                        {/* 데이터 테이블 */}
                         <div className="table-area">
                             <table>
                                 <thead>
