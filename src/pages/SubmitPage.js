@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
+import './styles/SubmitPage.css'
 
 const SubmitPage = () => {
     const [userRole, setUserRole] = useState('');
@@ -8,6 +9,7 @@ const SubmitPage = () => {
     const [previewUrl, setPreviewUrl] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
         const storedRole = localStorage.getItem('userRole');
@@ -99,9 +101,15 @@ const SubmitPage = () => {
                             required
                         />
                         {previewUrl && (
-                            <div className="image-preview">
-                                <img src={previewUrl} alt="Preview" />
-                            </div>
+                            <>
+                                <button 
+                                    type="button" 
+                                    className="preview-button"
+                                    onClick={() => setShowModal(true)}
+                                >
+                                    이미지 미리보기
+                                </button>
+                            </>
                         )}
                     </div>
 
@@ -110,6 +118,21 @@ const SubmitPage = () => {
                     </button>
                 </form>
             </div>
+
+            {/* 모달 */}
+            {showModal && (
+                <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <img src={previewUrl} alt="Preview" className="modal-image"/>
+                        <button 
+                            className="modal-close-button"
+                            onClick={() => setShowModal(false)}
+                        >
+                            닫기
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

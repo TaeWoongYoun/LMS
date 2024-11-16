@@ -1,0 +1,115 @@
+.submit-page{
+    width: 100%;
+    height: calc(100vh - 140px);
+    position: relative;
+}
+
+.submit-container{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0px 15px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 500px;
+}
+
+.form-group{
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    text-align: left;
+    font-size: 18px;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.form-group input, .form-group textarea {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 8px;
+    align-content: center;
+}
+
+.submit-container .submit-button {
+    background-color: #007bff;
+    color: white;
+    padding: 18px 30px;
+    font-size: 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.submit-container .submit-button:hover {
+    background-color: #0056b3;
+}
+
+.submit-page .preview-button {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-page .preview-button:hover {
+    background-color: #45a049;
+}
+
+.submit-page .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.submit-page .modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.submit-page .modal-image {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.submit-page .modal-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 8px 16px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-page .modal-close-button:hover {
+    background-color: #cc0000;
+}
