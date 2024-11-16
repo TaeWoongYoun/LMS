@@ -26,12 +26,11 @@
 
 .check-page th, td {
     padding: 12px;
-    border-bottom: 1px solid #111;
+    border-bottom: 1px solid #0F172A;
 }
 
 .check-page th {
-    background-color: #111;
-    font-weight: bold;
+    background-color: #0F172A;
 }
 
 .check-page .view-image-btn {

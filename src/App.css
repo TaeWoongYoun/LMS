@@ -17,33 +17,65 @@ ul li{
   text-align: center;
 }
 
-header{
+header {
   width: 100%;
   height: 70px;
-  background-color: #111;
+  background-color: #0F172A;
   color: #fff;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  position: relative;
 }
 
-.logo{
+.logo {
   width: 200px;
   height: 70px;
-  align-content: center;
+  display: flex;
+  align-items: center;
 }
 
-nav{
-  width: 450px;
+nav {
+  width: auto;
   height: 100%;
+  margin-right: 20px;
 }
 
-nav ul{
+nav ul {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-evenly;
-  font-size: 22px;
+  gap: 40px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+nav ul li {
+  position: relative;
+  padding: 5px 10px;
+  transition: all 0.3s ease;
+}
+
+nav ul li:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 50%;
+  background-color: #cee8e5;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+nav ul li:hover {
+  color: #cee8e5;
+}
+
+nav ul li:hover:after {
+  width: 100%;
 }
 
 .content{
@@ -64,20 +96,20 @@ nav ul{
 .search-area select{
   width: 200px;
   height: 40px;
-  border: 1px solid black;
+  border: 1px solid #0F172A;
   padding-left: 10px;
   margin-right: 10px;
-  font-size: 20px;
+  font-size: 18px;
   border-radius: 10px;
 }
 
 .search-area input{
   width: 400px;
-  padding-left: 10px;
   height: 40px;
-  border: 1px solid black;
+  padding-left: 10px;
+  border: 1px solid #0F172A;
   border-radius: 10px;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .table-area{
@@ -96,24 +128,29 @@ table {
 }
 
 .table-area::-webkit-scrollbar {
-  width: 15px;
+  width: 12px;
 }
 
 .table-area::-webkit-scrollbar-thumb {
-  background-color: #111;
-  border-radius: 10px;
+  background-color: #0F172A;
+  border-radius: 6px;
   background-clip: padding-box;
-  border: 2px solid transparent;
+  border: 3px solid transparent;
+  transition: background-color 0.3s ease;
+}
+
+.table-area::-webkit-scrollbar-thumb:hover {
+  background-color: #1E293B;
 }
 
 .table-area::-webkit-scrollbar-track {
-  background-color: grey;
-  border-radius: 10px;
-  box-shadow: inset 0px 0px 5px white;
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
 }
 
 th{
-  background-color: black;
+  background-color: #0F172A;
   color: #fff;
 }
 
@@ -123,7 +160,7 @@ tr:hover{
 }
 
 th, td{
-  border: 1px solid black;
+  border: 1px solid #0F172A;
   padding: 5px 10px;
 }
 
@@ -248,18 +285,25 @@ footer{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #111;
+  background-color: #0F172A;
   color: #fff;
 }
 
+footer .logo{
+  width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .login-message {
-  padding: 10px 20px;
-  background-color: #111;
+  padding: 20px 40px;
+  background-color: #0F172A;
   color: #fff;
   font-size: 24px;
   font-weight: bold;
-  border-radius: 25px;
-  box-shadow: 0 0px 10px #444;
+  border-radius: 40px;
+  box-shadow: 0 0px 20px rgba(0, 0, 0, 0.2);
   max-width: 600px;
 }
 
@@ -428,7 +472,6 @@ address{
   text-align: center;
 }
 
-/* 이미지 미리보기 모달 스타일 */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -473,7 +516,6 @@ address{
   background-color: #cc0000;
 }
 
-/* 파일 입력 스타일링 */
 .submit-modal input[type="file"] {
   width: 100%;
   padding: 10px;
