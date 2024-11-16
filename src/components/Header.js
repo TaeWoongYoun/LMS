@@ -7,24 +7,24 @@ function Header() {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        const userName = localStorage.getItem('userName');
+        const userRole = localStorage.getItem('userRole');
 
         if (token) {
-            if (userName === 'admin') {
-                setLoginStatus('admin'); // admin으로 로그인
+            if (userRole === 'admin') {
+                setLoginStatus('admin');
             } else {
-                setLoginStatus('user'); // 일반 사용자로 로그인
+                setLoginStatus('user');
             }
         } else {
-            setLoginStatus(null); // 로그인하지 않음
+            setLoginStatus(null);
         }
 
         const handleLoginChange = () => {
             const token = localStorage.getItem('token');
-            const userName = localStorage.getItem('userName');
+            const userRole = localStorage.getItem('userRole');
 
             if (token) {
-                if (userName === 'admin') {
+                if (userRole === 'admin') {
                     setLoginStatus('admin');
                 } else {
                     setLoginStatus('user');
@@ -44,6 +44,7 @@ function Header() {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userName');
+        localStorage.removeItem('userRole');
         setLoginStatus(null);
         window.dispatchEvent(new Event('loginChange'));
         navigate('/');
@@ -66,8 +67,8 @@ function Header() {
                         </>
                     ) : loginStatus === 'admin' ? (
                         <>
-                            <li><Link to="/delete">Delete</Link></li> {/* admin 전용 메뉴 */}
-                            <li><Link to="/user">User</Link></li> {/* admin 전용 메뉴 */}
+                            <li><Link to="/delete">Delete</Link></li>
+                            <li><Link to="/user">User</Link></li>
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                         </>
                     ) : (

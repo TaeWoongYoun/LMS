@@ -10,15 +10,8 @@ const path = require('path');
 const app = express();
 const port = 3001;
 
-// MySQL 데이터베이스 연결 설정
-const db = mysql.createConnection({ 
-    host: 'localhost', 
-    user: 'root', 
-    password: '', 
-    database: 'LMS' 
-});
+const db = mysql.createConnection({ host: 'localhost', user: 'root', password: '', database: 'LMS' });
 
-// 데이터베이스 연결을 시도합니다.
 db.connect((err) => {
     if (err) {
         console.error('데이터베이스 연결 실패', err);
@@ -27,16 +20,12 @@ db.connect((err) => {
     console.log('데이터베이스 연결 성공');
 });
 
-// 서버 실행
 app.listen(port, () => {
     console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
 });
 
-// CORS 허용을 위해 cors 미들웨어 사용
 app.use(cors());
-// 요청 본문을 JSON으로 파싱하기 위해 body-parser 미들웨어 사용
 app.use(bodyParser.json({ limit: '50mb' }));
-// 정적 파일 제공
 app.use(express.static('public'));
 
 // 폴더 존재 여부 확인 및 생성 함수
@@ -83,21 +72,16 @@ async function appendToIframeDataFile(newData) {
 app.post('/api/register', (req, res) => {
     const { id, pw, name } = req.body;
 
-    // 비밀번호를 해시화
     bcrypt.hash(pw, 10, (err, hashedPassword) => {
         if (err) {
-            console.error('비밀번호 해시 중 오류 발생:', err);
             return res.status(500).json({ error: '비밀번호 처리 중 오류가 발생했습니다.' });
         }
 
-        // 새 사용자 추가
         const sql = 'INSERT INTO user (id, pw, name) VALUES (?, ?, ?)';
         db.query(sql, [id, hashedPassword, name], (err, result) => {
             if (err) {
-                console.error('사용자 추가 중 오류 발생:', err);
                 return res.status(500).json({ error: '사용자 추가 중 오류가 발생했습니다.' });
             }
-
             res.status(201).json({ message: '회원가입 성공' });
         });
     });
@@ -107,11 +91,9 @@ app.post('/api/register', (req, res) => {
 app.post('/api/login', (req, res) => {
     const { id, pw } = req.body;
 
-    // 사용자 조회
     const sql = 'SELECT * FROM user WHERE id = ?';
     db.query(sql, [id], (err, results) => {
         if (err) {
-            console.error('사용자 조회 중 오류 발생:', err);
             return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
         }
 
@@ -121,10 +103,8 @@ app.post('/api/login', (req, res) => {
 
         const user = results[0];
 
-        // 비밀번호 확인
         bcrypt.compare(pw, user.pw, (err, isMatch) => {
             if (err) {
-                console.error('비밀번호 확인 중 오류 발생:', err);
                 return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
             }
 
@@ -132,17 +112,25 @@ app.post('/api/login', (req, res) => {
                 return res.status(401).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
             }
 
-            // JWT 생성
-            const token = jwt.sign({ id: user.id, name: user.name }, 'your_jwt_secret', { expiresIn: '1h' });
+            const token = jwt.sign(
+                { 
+                    id: user.id, 
+                    name: user.name,
+                    role: user.role
+                }, 
+                'your_jwt_secret', 
+                { expiresIn: '1h' }
+            );
 
             res.status(200).json({ 
                 message: '로그인 성공', 
                 token,
-                name: user.name  // 사용자 이름도 함께 전송
+                name: user.name,
+                role: user.role
             });
         });
     });
-});
+    });
 
 // 모듈 저장 API
 app.post('/api/save-module', async (req, res) => {
@@ -187,111 +175,85 @@ app.post('/api/save-module', async (req, res) => {
 
 // 모듈 삭제 API
 app.delete('/api/delete-module', async (req, res) => {
-    const { path: modulePath, name } = req.body;
-    
-    try {
-        // 1. 디렉토리째로 삭제 (파일별 삭제가 아닌 폴더 전체 삭제)
-        const projectRoot = path.join(__dirname, '..');
-        const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
-        const parentDir = path.dirname(moduleDir); // 상위 디렉토리 경로 가져오기
-        await fs.rm(parentDir, { recursive: true, force: true });
+   const { path: modulePath, name } = req.body;
+   
+   try {
+       const projectRoot = path.join(__dirname, '..');
+       const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
+       const parentDir = path.dirname(moduleDir);
+       await fs.rm(parentDir, { recursive: true, force: true });
 
-        // 2. iframeData.js 수정
-        const iframeDataPath = path.join(projectRoot, 'react-start', 'src', 'data', 'iframeData.js');
-        let content = await fs.readFile(iframeDataPath, 'utf8');
-        
-        // 정규식을 사용하여 정확한 객체 찾기
-        const regex = new RegExp(`\\{[^}]*name:\\s*"${name}"[^}]*\\}`, 'g');
-        content = content.replace(regex, '');
-        
-        // 연속된 쉼표 정리
-        content = content.replace(/,\s*,/g, ',');
-        // 배열 시작 부분의 쉼표 정리
-        content = content.replace(/\[\s*,/, '[');
-        // 배열 끝 부분의 쉼표 정리
-        content = content.replace(/,\s*\]/, ']');
-        
-        // 줄바꿈 정리
-        content = content.replace(/\n\s*\n/g, '\n');
-        
-        await fs.writeFile(iframeDataPath, content, 'utf8');
+       const iframeDataPath = path.join(projectRoot, 'react-start', 'src', 'data', 'iframeData.js');
+       let content = await fs.readFile(iframeDataPath, 'utf8');
+       
+       const regex = new RegExp(`\\{[^}]*name:\\s*"${name}"[^}]*\\}`, 'g');
+       content = content.replace(regex, '');
+       
+       content = content.replace(/,\s*,/g, ',');
+       content = content.replace(/\[\s*,/, '[');
+       content = content.replace(/,\s*\]/, ']');
+       content = content.replace(/\n\s*\n/g, '\n');
+       
+       await fs.writeFile(iframeDataPath, content, 'utf8');
 
-        res.status(200).json({ message: '삭제 완료' });
-    } catch (error) {
-        console.error('삭제 중 오류:', error);
-        res.status(500).json({ error: '삭제 실패' });
-    }
+       res.status(200).json({ message: '삭제 완료' });
+   } catch (error) {
+       res.status(500).json({ error: '삭제 실패' });
+   }
 });
 
-// 사용자 조회 API (role 포함)
+// 사용자 조회 API
 app.get('/api/users', (req, res) => {
-    const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('사용자 조회 중 오류 발생:', err);
-            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
-        }
-        res.json(results);
-    });
+   const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
+   db.query(sql, (err, results) => {
+       if (err) {
+           return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
+       }
+       res.json(results);
+   });
 });
 
 // 사용자 권한 변경 API
 app.put('/api/users/:idx/role', (req, res) => {
-    const userIdx = req.params.idx;
-    const { role } = req.body;
-    
-    // role 값 검증
-    if (!['user', 'manager'].includes(role)) {
-        return res.status(400).json({ error: '잘못된 권한 값입니다.' });
-    }
+   const userIdx = req.params.idx;
+   const { role } = req.body;
+   
+   if (!['user', 'manager'].includes(role)) {
+       return res.status(400).json({ error: '잘못된 권한 값입니다.' });
+   }
 
-    const sql = 'UPDATE user SET role = ? WHERE idx = ? AND id != "admin"';
-    db.query(sql, [role, userIdx], (err, result) => {
-        if (err) {
-            console.error('권한 변경 중 오류 발생:', err);
-            return res.status(500).json({ error: '권한 변경 중 오류가 발생했습니다.' });
-        }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
-        }
-        
-        res.json({ message: '권한이 성공적으로 변경되었습니다.' });
-    });
+   const sql = 'UPDATE user SET role = ? WHERE idx = ? AND id != "admin"';
+   db.query(sql, [role, userIdx], (err, result) => {
+       if (err) {
+           return res.status(500).json({ error: '권한 변경 중 오류가 발생했습니다.' });
+       }
+       
+       if (result.affectedRows === 0) {
+           return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+       }
+       
+       res.json({ message: '권한이 성공적으로 변경되었습니다.' });
+   });
 });
 
-// 사용자 조회 API (role 포함)
-app.get('/api/users', (req, res) => {
-    const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('사용자 조회 중 오류 발생:', err);
-            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
-        }
-        res.json(results);
-    });
-});
-
-// 사용자 삭제 API 추가
+// 사용자 삭제 API
 app.delete('/api/users/:idx', (req, res) => {
-    const userIdx = req.params.idx;
-    
-    const sql = 'DELETE FROM user WHERE idx = ? AND id != "admin"';
-    db.query(sql, [userIdx], (err, result) => {
-        if (err) {
-            console.error('사용자 삭제 중 오류 발생:', err);
-            return res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
-        }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
-        }
-        
-        res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
-    });
+   const userIdx = req.params.idx;
+   
+   const sql = 'DELETE FROM user WHERE idx = ? AND id != "admin"';
+   db.query(sql, [userIdx], (err, result) => {
+       if (err) {
+           return res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
+       }
+       
+       if (result.affectedRows === 0) {
+           return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+       }
+       
+       res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
+   });
 });
 
-// 기본 라우트 처리
 app.get('/', (req, res) => {
-    res.send('Hello, World!');
+   res.send('Hello, World!');
 });
