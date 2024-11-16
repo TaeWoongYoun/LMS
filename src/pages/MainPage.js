@@ -14,8 +14,6 @@ function MainPage() {
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState(''); 
     const [userName, setUserName] = useState('');
-    
-    // 과제 제출 관련 상태
     const [submissionData, setSubmissionData] = useState(null);
     const [description, setDescription] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
@@ -23,6 +21,7 @@ function MainPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [completedAssignments, setCompletedAssignments] = useState([]);
 
     useEffect(() => {
         if (showCode) {
@@ -184,6 +183,23 @@ function MainPage() {
         };
     }, []);
 
+    useEffect(() => {
+        const fetchCompletedAssignments = async () => {
+            const userName = localStorage.getItem('userName');
+            if (!userName) return;
+    
+            try {
+                const response = await fetch(`http://localhost:3001/api/completed-assignments/${userName}`);
+                const data = await response.json();
+                setCompletedAssignments(data.map(item => item.assignment_name));
+            } catch (error) {
+                console.error('완료된 과제 조회 실패:', error);
+            }
+        };
+    
+        fetchCompletedAssignments();
+    }, [userName]);
+
     return (
         <div className="main-page">
             <div className="content">
@@ -227,28 +243,36 @@ function MainPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredData.map((item, index) => (
-                                        <tr key={index}>
-                                            <td>Lv. {item.level}</td>
-                                            <td>{item.module}모듈</td>
-                                            <td>{item.name}</td>
-                                            <td>{item.description}</td>
-                                            <td>
-                                                <button 
-                                                    className="preview-btn"
-                                                    onClick={(e) => handlePreview(item, e)}
-                                                >
-                                                    미리보기
-                                                </button>
+                                {filteredData.map((item, index) => (
+                                    <tr key={index}>
+                                        <td>
+                                            {completedAssignments.includes(item.name) ? 
+                                                <span className="completion-check">✓</span> : 
+                                                null
+                                            }
+                                            Lv. {item.level}
+                                        </td>
+                                        <td>{item.module}모듈</td>
+                                        <td>{item.name}</td>
+                                        <td>{item.description}</td>
+                                        <td>
+                                            <button 
+                                                className="preview-btn"
+                                                onClick={(e) => handlePreview(item, e)}
+                                            >
+                                                미리보기
+                                            </button>
+                                            {!completedAssignments.includes(item.name) && (
                                                 <button 
                                                     className="submit-btn"
                                                     onClick={(e) => handleSubmitClick(item, e)}
                                                 >
                                                     과제 제출
                                                 </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
                                 </tbody>
                             </table>
                         </div>

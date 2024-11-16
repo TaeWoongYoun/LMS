@@ -6,7 +6,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
-
 const app = express();
 const port = 3001;
 
@@ -282,24 +281,51 @@ const upload = multer({
 
 // 과제 제출 API
 app.post('/api/submit', upload.single('image'), (req, res) => {
-    const { userName, description } = req.body;
+    const { userName, description, assignmentName, assignmentPath } = req.body;
     const imagePath = `/uploads/${req.file.filename}`;
 
-    const sql = 'INSERT INTO submissions (user_name, image_path, description) VALUES (?, ?, ?)';
-    db.query(sql, [userName, imagePath, description], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
+    // 이미 완료된 과제인지 확인
+    db.query(
+        'SELECT 1 FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
+        [userName, assignmentName],
+        (checkErr, checkResults) => {
+            if (checkErr) {
+                return res.status(500).json({ error: '과제 확인 중 오류가 발생했습니다.' });
+            }
+
+            if (checkResults.length > 0) {
+                return res.status(400).json({ error: '이미 완료된 과제입니다.' });
+            }
+
+            // 과제 제출 처리
+            const sql = 'INSERT INTO submissions (user_name, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
+            db.query(sql, [userName, imagePath, description, assignmentName, assignmentPath], (err, result) => {
+                if (err) {
+                    return res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
+                }
+                
+                res.status(201).json({ 
+                    message: '과제가 성공적으로 제출되었습니다.',
+                    imagePath: imagePath
+                });
+            });
         }
-        
-        res.status(201).json({ 
-            message: '과제가 성공적으로 제출되었습니다.',
-            imagePath: imagePath
-        });
-    });
+    );
 });
 
+// 제출된 과제 목록 조회 API
 app.get('/api/submissions', (req, res) => {
-    const sql = 'SELECT * FROM submissions ORDER BY submit_time DESC';
+    const sql = `
+        SELECT s.*, 
+               NOT EXISTS (
+                   SELECT 1 
+                   FROM completed_assignments ca 
+                   WHERE ca.user_name = s.user_name 
+                   AND ca.assignment_name = s.assignment_name
+               ) as is_pending 
+        FROM submissions s 
+        ORDER BY s.submit_time DESC
+    `;
     
     db.query(sql, (err, results) => {
         if (err) {
@@ -310,6 +336,64 @@ app.get('/api/submissions', (req, res) => {
     });
 });
 
+// 과제 완료 처리 API
+app.post('/api/complete-assignment', (req, res) => {
+    const { userName, assignmentName } = req.body;
+
+    db.beginTransaction(err => {
+        if (err) {
+            return res.status(500).json({ error: '트랜잭션 시작 중 오류가 발생했습니다.' });
+        }
+
+        // 1. 완료 처리
+        const insertSql = 'INSERT INTO completed_assignments (user_name, assignment_name) VALUES (?, ?)';
+        db.query(insertSql, [userName, assignmentName], (err, result) => {
+            if (err) {
+                db.rollback(() => {
+                    if (err.code === 'ER_DUP_ENTRY') {
+                        return res.status(400).json({ error: '이미 완료된 과제입니다.' });
+                    }
+                    return res.status(500).json({ error: '과제 완료 처리 중 오류가 발생했습니다.' });
+                });
+                return;
+            }
+
+            // 2. 제출 기록 삭제
+            const deleteSql = 'DELETE FROM submissions WHERE user_name = ? AND assignment_name = ?';
+            db.query(deleteSql, [userName, assignmentName], (delErr) => {
+                if (delErr) {
+                    return db.rollback(() => {
+                        res.status(500).json({ error: '제출 기록 삭제 중 오류가 발생했습니다.' });
+                    });
+                }
+
+                db.commit(commitErr => {
+                    if (commitErr) {
+                        return db.rollback(() => {
+                            res.status(500).json({ error: '트랜잭션 커밋 중 오류가 발생했습니다.' });
+                        });
+                    }
+                    res.json({ message: '과제가 성공적으로 완료 처리되었습니다.' });
+                });
+            });
+        });
+    });
+});
+
+// 완료된 과제 목록 조회 API
+app.get('/api/completed-assignments/:userName', (req, res) => {
+    const { userName } = req.params;
+    const sql = 'SELECT assignment_name, completed_at FROM completed_assignments WHERE user_name = ?';
+    
+    db.query(sql, [userName], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: '완료된 과제 조회 중 오류가 발생했습니다.' });
+        }
+        res.json(results);
+    });
+});
+
+// 특정 과제 삭제 API
 app.delete('/api/submissions/:idx', (req, res) => {
     const submissionIdx = req.params.idx;
     
@@ -322,7 +406,6 @@ app.delete('/api/submissions/:idx', (req, res) => {
         res.json({ message: '과제가 성공적으로 삭제되었습니다.' });
     });
 });
-
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
