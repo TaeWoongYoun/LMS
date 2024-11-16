@@ -10,6 +10,7 @@ import MainPage from './pages/MainPage.js';
 import DeletePage from './pages/DeletePage.js';
 import UserPage from './pages/UserPage.js';
 import SubmitPage from './pages/SubmitPage.js';
+import CheckPage from './pages/CheckPage.js';
 import 'prismjs/themes/prism-tomorrow.css';
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
           <Route path='/delete' element={<DeletePage />} />
           <Route path='/user' element={<UserPage />} />
           <Route path='/submit' element={<SubmitPage />} />
+          <Route path='/check' element={<CheckPage />} />
         </Routes>
         <Footer />
       </Router>

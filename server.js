@@ -298,6 +298,18 @@ app.post('/api/submit', upload.single('image'), (req, res) => {
     });
 });
 
+app.get('/api/submissions', (req, res) => {
+    const sql = 'SELECT * FROM submissions ORDER BY submit_time DESC';
+    
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('과제 목록 조회 중 오류 발생:', err);
+            return res.status(500).json({ error: '과제 목록 조회 중 오류가 발생했습니다.' });
+        }
+        res.json(results);
+    });
+});
+
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });

@@ -8,24 +8,28 @@ function Header() {
     useEffect(() => {
         const token = localStorage.getItem('token');
         const userRole = localStorage.getItem('userRole');
-
+    
         if (token) {
             if (userRole === 'admin') {
                 setLoginStatus('admin');
+            } else if (userRole === 'manager') {
+                setLoginStatus('manager');
             } else {
                 setLoginStatus('user');
             }
         } else {
             setLoginStatus(null);
         }
-
+    
         const handleLoginChange = () => {
             const token = localStorage.getItem('token');
             const userRole = localStorage.getItem('userRole');
-
+    
             if (token) {
                 if (userRole === 'admin') {
                     setLoginStatus('admin');
+                } else if (userRole === 'manager') {
+                    setLoginStatus('manager');
                 } else {
                     setLoginStatus('user');
                 }
@@ -33,9 +37,9 @@ function Header() {
                 setLoginStatus(null);
             }
         };
-
+    
         window.addEventListener('loginChange', handleLoginChange);
-
+    
         return () => {
             window.removeEventListener('loginChange', handleLoginChange);
         };
@@ -67,14 +71,15 @@ function Header() {
                         </>
                     ) : loginStatus === 'admin' ? (
                         <>
-                            <li><Link to="/delete">Delete</Link></li>
+                            <li><Link to="/check">Check</Link></li>
                             <li><Link to="/user">User</Link></li>
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                         </>
                     ) : loginStatus === 'manager' ? (
                         <>
-                            <li><Link to="/welcome">Welcome</Link></li>
                             <li><Link to="/insert">Insert</Link></li>
+                            <li><Link to="/delete">Delete</Link></li>
+                            <li><Link to="/check">Check</Link></li>
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                         </>
                     ) : (
