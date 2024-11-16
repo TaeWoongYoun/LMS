@@ -18,10 +18,8 @@ const UserPage = () => {
         throw new Error('사용자 데이터 로딩에 실패했습니다.');
       }
       const data = await response.json();
-      console.log('Fetched users data:', data);
       setUsers(data);
     } catch (error) {
-      console.error('Error fetching users:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -49,8 +47,7 @@ const UserPage = () => {
       );
       alert('권한이 변경되었습니다.');
     } catch (error) {
-      console.error('Error updating role:', error);
-      alert(error.message);
+      alert('권한 변경에 실패했습니다.');
     }
   };
 
@@ -71,8 +68,7 @@ const UserPage = () => {
       setUsers(prevUsers => prevUsers.filter(user => user.idx !== idx));
       alert('사용자가 삭제되었습니다.');
     } catch (error) {
-      console.error('Error deleting user:', error);
-      alert(error.message);
+      alert('사용자 삭제에 실패했습니다.');
     }
   };
 
@@ -104,32 +100,18 @@ const UserPage = () => {
               <td>{user.id}</td>
               <td>{user.name}</td>
               <td>
-                <select
-                  key={`role-${user.idx}`}
-                  value={user.role || 'user'}
-                  onChange={e => handleRoleChange(user.idx, e.target.value)}
-                  className="role-select"
-                >
+                <select key={`role-${user.idx}`} value={user.role || 'user'} onChange={e => handleRoleChange(user.idx, e.target.value)} className="role-select">
                   <option value="user">일반회원</option>
                   <option value="manager">담당자</option>
                 </select>
               </td>
               <td>
-                <button
-                  onClick={() => handleDelete(user.idx)}
-                  className="delete-button"
-                >
-                  삭제
-                </button>
+                <button onClick={() => handleDelete(user.idx)} className="delete-button">삭제</button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="debug-info" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5' }}>
-        <h3>디버그 정보</h3>
-        <pre>{JSON.stringify(users, null, 2)}</pre>
-      </div>
     </div>
   );
 };
