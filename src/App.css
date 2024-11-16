@@ -286,6 +286,10 @@ address{
   height: 50px;
 }
 
+.status-icon{
+  font-size: 26px;
+}
+
 .table-area .preview-btn, .table-area .submit-btn{
   padding: 5px 10px;
   font-size: 18px;
@@ -312,7 +316,6 @@ address{
   background-color:  #45a049;
 }
 
-/* MainPage.css에 추가 */
 .submit-modal {
   width: 100%;
   max-width: 500px !important;
