@@ -175,85 +175,129 @@ app.post('/api/save-module', async (req, res) => {
 
 // 모듈 삭제 API
 app.delete('/api/delete-module', async (req, res) => {
-   const { path: modulePath, name } = req.body;
-   
-   try {
-       const projectRoot = path.join(__dirname, '..');
-       const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
-       const parentDir = path.dirname(moduleDir);
-       await fs.rm(parentDir, { recursive: true, force: true });
+    const { path: modulePath, name } = req.body;
+    
+    try {
+        const projectRoot = path.join(__dirname, '..');
+        const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
+        const parentDir = path.dirname(moduleDir);
+        await fs.rm(parentDir, { recursive: true, force: true });
 
-       const iframeDataPath = path.join(projectRoot, 'react-start', 'src', 'data', 'iframeData.js');
-       let content = await fs.readFile(iframeDataPath, 'utf8');
-       
-       const regex = new RegExp(`\\{[^}]*name:\\s*"${name}"[^}]*\\}`, 'g');
-       content = content.replace(regex, '');
-       
-       content = content.replace(/,\s*,/g, ',');
-       content = content.replace(/\[\s*,/, '[');
-       content = content.replace(/,\s*\]/, ']');
-       content = content.replace(/\n\s*\n/g, '\n');
-       
-       await fs.writeFile(iframeDataPath, content, 'utf8');
+        const iframeDataPath = path.join(projectRoot, 'react-start', 'src', 'data', 'iframeData.js');
+        let content = await fs.readFile(iframeDataPath, 'utf8');
+        
+        const regex = new RegExp(`\\{[^}]*name:\\s*"${name}"[^}]*\\}`, 'g');
+        content = content.replace(regex, '');
+        
+        content = content.replace(/,\s*,/g, ',');
+        content = content.replace(/\[\s*,/, '[');
+        content = content.replace(/,\s*\]/, ']');
+        content = content.replace(/\n\s*\n/g, '\n');
+        
+        await fs.writeFile(iframeDataPath, content, 'utf8');
 
-       res.status(200).json({ message: '삭제 완료' });
-   } catch (error) {
-       res.status(500).json({ error: '삭제 실패' });
-   }
+        res.status(200).json({ message: '삭제 완료' });
+    } catch (error) {
+        res.status(500).json({ error: '삭제 실패' });
+    }
 });
 
 // 사용자 조회 API
 app.get('/api/users', (req, res) => {
-   const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
-   db.query(sql, (err, results) => {
-       if (err) {
-           return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
-       }
-       res.json(results);
-   });
+    const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
+    db.query(sql, (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
+        }
+        res.json(results);
+    });
 });
 
 // 사용자 권한 변경 API
 app.put('/api/users/:idx/role', (req, res) => {
-   const userIdx = req.params.idx;
-   const { role } = req.body;
-   
-   if (!['user', 'manager'].includes(role)) {
-       return res.status(400).json({ error: '잘못된 권한 값입니다.' });
-   }
+    const userIdx = req.params.idx;
+    const { role } = req.body;
+    
+    if (!['user', 'manager'].includes(role)) {
+        return res.status(400).json({ error: '잘못된 권한 값입니다.' });
+    }
 
-   const sql = 'UPDATE user SET role = ? WHERE idx = ? AND id != "admin"';
-   db.query(sql, [role, userIdx], (err, result) => {
-       if (err) {
-           return res.status(500).json({ error: '권한 변경 중 오류가 발생했습니다.' });
-       }
-       
-       if (result.affectedRows === 0) {
-           return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
-       }
-       
-       res.json({ message: '권한이 성공적으로 변경되었습니다.' });
-   });
+    const sql = 'UPDATE user SET role = ? WHERE idx = ? AND id != "admin"';
+    db.query(sql, [role, userIdx], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: '권한 변경 중 오류가 발생했습니다.' });
+        }
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+        }
+        
+        res.json({ message: '권한이 성공적으로 변경되었습니다.' });
+    });
 });
 
 // 사용자 삭제 API
 app.delete('/api/users/:idx', (req, res) => {
-   const userIdx = req.params.idx;
-   
-   const sql = 'DELETE FROM user WHERE idx = ? AND id != "admin"';
-   db.query(sql, [userIdx], (err, result) => {
-       if (err) {
-           return res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
-       }
-       
-       if (result.affectedRows === 0) {
-           return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
-       }
-       
-       res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
-   });
+    const userIdx = req.params.idx;
+    
+    const sql = 'DELETE FROM user WHERE idx = ? AND id != "admin"';
+    db.query(sql, [userIdx], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
+        }
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+        }
+        
+        res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
+    });
+});
+
+const multer = require('multer');
+
+// 이미지 저장을 위한 multer 설정
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname)
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB 제한
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('이미지 파일만 업로드 가능합니다.'));
+        }
+    }
+});
+
+// 과제 제출 API
+app.post('/api/submit', upload.single('image'), (req, res) => {
+    const { userName, description } = req.body;
+    const imagePath = `/uploads/${req.file.filename}`;
+
+    const sql = 'INSERT INTO submissions (user_name, image_path, description) VALUES (?, ?, ?)';
+    db.query(sql, [userName, imagePath, description], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
+        }
+        
+        res.status(201).json({ 
+            message: '과제가 성공적으로 제출되었습니다.',
+            imagePath: imagePath
+        });
+    });
 });
 
 app.get('/', (req, res) => {
-   res.send('Hello, World!');
+    res.send('Hello, World!');
 });
