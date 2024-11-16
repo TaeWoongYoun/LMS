@@ -310,6 +310,19 @@ app.get('/api/submissions', (req, res) => {
     });
 });
 
+app.delete('/api/submissions/:idx', (req, res) => {
+    const submissionIdx = req.params.idx;
+    
+    const sql = 'DELETE FROM submissions WHERE idx = ?';
+    db.query(sql, [submissionIdx], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: '과제 삭제 중 오류가 발생했습니다.' });
+        }
+        
+        res.json({ message: '과제가 성공적으로 삭제되었습니다.' });
+    });
+});
+
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });

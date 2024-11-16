@@ -50,10 +50,29 @@ const CheckPage = () => {
         });
     };
 
+    const handleCheck = async (idx) => {
+        if (window.confirm('과제를 확인하셨습니까? 확인된 과제는 목록에서 삭제됩니다.')) {
+            try {
+                const response = await fetch(`http://localhost:3001/api/submissions/${idx}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // 성공적으로 삭제되면 목록에서도 제거
+                    setSubmissions(submissions.filter(submission => submission.idx !== idx));
+                } else {
+                    alert('과제 삭제 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                alert('과제 삭제 중 오류가 발생했습니다.');
+            }
+        }
+    };
+
     return (
         <div className="check-page">
             <div className="content">
-                <h1>과제 제출 목록</h1>  {/* 권한 표시 추가 */}
+                <h1>과제 제출 목록</h1>
                 <div className="table-container">
                     <table>
                         <thead>
@@ -62,6 +81,7 @@ const CheckPage = () => {
                                 <th>제출 시간</th>
                                 <th>설명</th>
                                 <th>이미지</th>
+                                <th>관리</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -71,15 +91,10 @@ const CheckPage = () => {
                                     <td>{formatDate(submission.submit_time)}</td>
                                     <td>{submission.description}</td>
                                     <td>
-                                        <button 
-                                            className="view-image-btn"
-                                            onClick={() => {
-                                                setSelectedImage(submission.image_path);
-                                                setShowModal(true);
-                                            }}
-                                        >
-                                            이미지 보기
-                                        </button>
+                                        <button className="view-image-btn"onClick={() => {setSelectedImage(submission.image_path);setShowModal(true);}}>이미지 보기</button>
+                                    </td>
+                                    <td>
+                                        <button className="check-btn"onClick={() => handleCheck(submission.idx)}>과제 확인</button>
                                     </td>
                                 </tr>
                             ))}
@@ -87,21 +102,12 @@ const CheckPage = () => {
                     </table>
                 </div>
             </div>
-
+    
             {showModal && (
                 <div className="modal-backdrop" onClick={() => setShowModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <img 
-                            src={`http://localhost:3001${selectedImage}`} 
-                            alt="Submission" 
-                            className="modal-image"
-                        />
-                        <button 
-                            className="modal-close-button"
-                            onClick={() => setShowModal(false)}
-                        >
-                            닫기
-                        </button>
+                        <img src={`http://localhost:3001${selectedImage}`} alt="Submission" className="modal-image"/>
+                        <button className="modal-close-button"onClick={() => setShowModal(false)}>닫기</button>
                     </div>
                 </div>
             )}
