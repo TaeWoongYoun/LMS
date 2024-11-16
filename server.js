@@ -282,35 +282,27 @@ const upload = multer({
 // 과제 제출 API
 app.post('/api/submit', upload.single('image'), (req, res) => {
     const { userName, description, assignmentName, assignmentPath } = req.body;
+    
+    if (!req.file) {
+        return res.status(400).json({ error: '이미지 파일이 필요합니다.' });
+    }
+
     const imagePath = `/uploads/${req.file.filename}`;
 
-    // 이미 완료된 과제인지 확인
-    db.query(
-        'SELECT 1 FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
-        [userName, assignmentName],
-        (checkErr, checkResults) => {
-            if (checkErr) {
-                return res.status(500).json({ error: '과제 확인 중 오류가 발생했습니다.' });
-            }
-
-            if (checkResults.length > 0) {
-                return res.status(400).json({ error: '이미 완료된 과제입니다.' });
-            }
-
-            // 과제 제출 처리
-            const sql = 'INSERT INTO submissions (user_name, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
-            db.query(sql, [userName, imagePath, description, assignmentName, assignmentPath], (err, result) => {
-                if (err) {
-                    return res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
-                }
-                
-                res.status(201).json({ 
-                    message: '과제가 성공적으로 제출되었습니다.',
-                    imagePath: imagePath
-                });
-            });
+    // 과제 제출
+    const sql = 'INSERT INTO submissions (user_name, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
+    
+    db.query(sql, [userName, imagePath, description, assignmentName, assignmentPath], (err, result) => {
+        if (err) {
+            console.error('과제 제출 중 오류:', err);
+            return res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
         }
-    );
+        
+        res.status(201).json({ 
+            message: '과제가 성공적으로 제출되었습니다.',
+            imagePath: imagePath
+        });
+    });
 });
 
 // 제출된 과제 목록 조회 API
@@ -406,6 +398,11 @@ app.delete('/api/submissions/:idx', (req, res) => {
         res.json({ message: '과제가 성공적으로 삭제되었습니다.' });
     });
 });
+
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
+
+
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });

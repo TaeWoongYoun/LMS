@@ -57,34 +57,34 @@ function MainPage() {
             setError('이미지를 선택해주세요.');
             return;
         }
-
+    
         const formData = new FormData();
         formData.append('image', selectedImage);
         formData.append('userName', userName);
         formData.append('description', description);
         formData.append('assignmentName', submissionData.name);
-
+        formData.append('assignmentPath', submissionData.path);
+    
         try {
             const response = await fetch('http://localhost:3001/api/submit', {
                 method: 'POST',
                 body: formData,
             });
-
-            const data = await response.json();
-
+    
             if (!response.ok) {
-                throw new Error(data.error);
+                const data = await response.json();
+                throw new Error(data.error || '과제 제출 중 오류가 발생했습니다.');
             }
-
+    
+            const data = await response.json();
             setSuccess('과제가 성공적으로 제출되었습니다!');
-            resetSubmissionForm();
-            
             setTimeout(() => {
-                setSuccess('');
-            }, 3000);
+                resetSubmissionForm();
+            }, 2000);
             
         } catch (error) {
-            setError(error.message || '과제 제출 중 오류가 발생했습니다.');
+            console.error('Submit error:', error);
+            setError(error.message);
         }
     };
 
