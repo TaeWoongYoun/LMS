@@ -411,7 +411,6 @@ app.delete('/api/submissions/:idx', (req, res) => {
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
 
-
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });
