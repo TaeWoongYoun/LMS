@@ -308,13 +308,12 @@ app.post('/api/submit', upload.single('image'), (req, res) => {
 // 제출된 과제 목록 조회 API
 app.get('/api/submissions', (req, res) => {
     const sql = `
-        SELECT s.*, 
-               NOT EXISTS (
-                   SELECT 1 
-                   FROM completed_assignments ca 
-                   WHERE ca.user_name = s.user_name 
-                   AND ca.assignment_name = s.assignment_name
-               ) as is_pending 
+        SELECT s.*, NOT EXISTS (
+                    SELECT 1 
+                    FROM completed_assignments ca 
+                    WHERE ca.user_name = s.user_name 
+                    AND ca.assignment_name = s.assignment_name
+                ) as is_pending 
         FROM submissions s 
         ORDER BY s.submit_time DESC
     `;
@@ -329,47 +328,57 @@ app.get('/api/submissions', (req, res) => {
 });
 
 // 과제 완료 처리 API
-app.post('/api/complete-assignment', (req, res) => {
-    const { userName, assignmentName } = req.body;
+app.post('/api/complete-assignment', async (req, res) => {
+    try {
+        const { userName, assignmentName } = req.body;
 
-    db.beginTransaction(err => {
-        if (err) {
-            return res.status(500).json({ error: '트랜잭션 시작 중 오류가 발생했습니다.' });
+        await db.promise().beginTransaction();
+
+        // 1. 제출된 과제의 이미지 경로 조회
+        const [submissions] = await db.promise().query(
+            'SELECT image_path FROM submissions WHERE user_name = ? AND assignment_name = ?',
+            [userName, assignmentName]
+        );
+
+        if (submissions.length > 0) {
+            // 2. 이미지 파일 삭제
+            const imagePath = submissions[0].image_path;
+            const fullImagePath = path.join(__dirname, 'public', imagePath);
+            
+            try {
+                await fs.unlink(fullImagePath);
+                console.log('이미지 파일 삭제 완료:', fullImagePath);
+            } catch (error) {
+                console.error('이미지 파일 삭제 실패:', error);
+                // 파일 삭제 실패는 트랜잭션을 롤백하지 않음 (DB 처리는 계속 진행)
+            }
         }
 
-        // 1. 완료 처리
-        const insertSql = 'INSERT INTO completed_assignments (user_name, assignment_name) VALUES (?, ?)';
-        db.query(insertSql, [userName, assignmentName], (err, result) => {
-            if (err) {
-                db.rollback(() => {
-                    if (err.code === 'ER_DUP_ENTRY') {
-                        return res.status(400).json({ error: '이미 완료된 과제입니다.' });
-                    }
-                    return res.status(500).json({ error: '과제 완료 처리 중 오류가 발생했습니다.' });
-                });
-                return;
-            }
+        // 3. 완료된 과제 테이블에 추가
+        await db.promise().query(
+            'INSERT INTO completed_assignments (user_name, assignment_name) VALUES (?, ?)',
+            [userName, assignmentName]
+        );
 
-            // 2. 제출 기록 삭제
-            const deleteSql = 'DELETE FROM submissions WHERE user_name = ? AND assignment_name = ?';
-            db.query(deleteSql, [userName, assignmentName], (delErr) => {
-                if (delErr) {
-                    return db.rollback(() => {
-                        res.status(500).json({ error: '제출 기록 삭제 중 오류가 발생했습니다.' });
-                    });
-                }
+        // 4. 제출 테이블에서 과제 삭제
+        await db.promise().query(
+            'DELETE FROM submissions WHERE user_name = ? AND assignment_name = ?',
+            [userName, assignmentName]
+        );
 
-                db.commit(commitErr => {
-                    if (commitErr) {
-                        return db.rollback(() => {
-                            res.status(500).json({ error: '트랜잭션 커밋 중 오류가 발생했습니다.' });
-                        });
-                    }
-                    res.json({ message: '과제가 성공적으로 완료 처리되었습니다.' });
-                });
-            });
-        });
-    });
+        await db.promise().commit();
+        res.json({ message: '과제가 성공적으로 완료 처리되었습니다.' });
+
+    } catch (error) {
+        await db.promise().rollback();
+
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: '이미 완료된 과제입니다.' });
+        }
+        
+        console.error('과제 완료 처리 중 오류:', error);
+        res.status(500).json({ error: '과제 완료 처리 중 오류가 발생했습니다.' });
+    }
 });
 
 // 완료된 과제 목록 조회 API

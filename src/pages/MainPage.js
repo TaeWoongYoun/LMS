@@ -14,6 +14,10 @@ function MainPage() {
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState(''); 
     const [userName, setUserName] = useState('');
+    const [completedAssignments, setCompletedAssignments] = useState([]);
+    const [submittedAssignments, setSubmittedAssignments] = useState([]);
+    
+    // 과제 제출 관련 상태
     const [submissionData, setSubmissionData] = useState(null);
     const [description, setDescription] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
@@ -21,13 +25,56 @@ function MainPage() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [showPreviewModal, setShowPreviewModal] = useState(false);
-    const [completedAssignments, setCompletedAssignments] = useState([]);
 
     useEffect(() => {
         if (showCode) {
             Prism.highlightAll();
         }
     }, [showCode]);
+
+    useEffect(() => {
+        const storedName = localStorage.getItem('userName');
+        setUserName(storedName || '');
+
+        if (storedName) {
+            fetchCompletedAssignments(storedName);
+            fetchSubmittedAssignments(storedName);
+        }
+
+        const handleLoginChange = () => {
+            const updatedName = localStorage.getItem('userName');
+            setUserName(updatedName || '');
+            if (updatedName) {
+                fetchCompletedAssignments(updatedName);
+                fetchSubmittedAssignments(updatedName);
+            }
+        };
+
+        window.addEventListener('loginChange', handleLoginChange);
+        return () => {
+            window.removeEventListener('loginChange', handleLoginChange);
+        };
+    }, []);
+
+    const fetchCompletedAssignments = async (userName) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/completed-assignments/${userName}`);
+            const data = await response.json();
+            setCompletedAssignments(data.map(item => item.assignment_name));
+        } catch (error) {
+            console.error('완료된 과제 조회 실패:', error);
+        }
+    };
+
+    const fetchSubmittedAssignments = async (userName) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/submissions/user/${userName}`);
+            const data = await response.json();
+            setSubmittedAssignments(data.map(item => item.assignment_name));
+        } catch (error) {
+            console.error('제출된 과제 조회 실패:', error);
+        }
+    };
 
     // 이미지 선택 처리
     const handleImageChange = (e) => {
@@ -57,34 +104,36 @@ function MainPage() {
             setError('이미지를 선택해주세요.');
             return;
         }
-    
+
         const formData = new FormData();
         formData.append('image', selectedImage);
         formData.append('userName', userName);
         formData.append('description', description);
         formData.append('assignmentName', submissionData.name);
         formData.append('assignmentPath', submissionData.path);
-    
+
         try {
             const response = await fetch('http://localhost:3001/api/submit', {
                 method: 'POST',
                 body: formData,
             });
-    
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || '과제 제출 중 오류가 발생했습니다.');
-            }
-    
+
             const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+
             setSuccess('과제가 성공적으로 제출되었습니다!');
+            // 제출 성공 시 제출된 과제 목록 업데이트
+            setSubmittedAssignments([...submittedAssignments, submissionData.name]);
+            
             setTimeout(() => {
                 resetSubmissionForm();
             }, 2000);
             
         } catch (error) {
-            console.error('Submit error:', error);
-            setError(error.message);
+            setError(error.message || '과제 제출 중 오류가 발생했습니다.');
         }
     };
 
@@ -94,55 +143,66 @@ function MainPage() {
         setSelectedImage(null);
         setPreviewUrl('');
         setError('');
+        setSuccess('');
         setSubmissionData(null);
     };
 
-    // 과제 확인
+    // 과제 미리보기
     const handlePreview = async (data, e) => {
         e.stopPropagation();
         setSelected(data);
         setShowCode(false);
 
-        const htmlResponse = await fetch(data.path);
-        const htmlText = await htmlResponse.text();
-        setHtmlCode(htmlText);
+        try {
+            const htmlResponse = await fetch(data.path);
+            const htmlText = await htmlResponse.text();
+            setHtmlCode(htmlText);
 
-        const cssPath = data.path.replace('index.html', 'style.css');
-        const cssResponse = await fetch(cssPath);
-        const cssText = await cssResponse.text();
-        setCssCode(cssText);
-    
-        const jsPath = data.path.replace('index.html', 'index.js');
-        const jsResponse = await fetch(jsPath);
-        if (!jsResponse.ok) {
-            setJsCode('');
-            return;
+            const cssPath = data.path.replace('index.html', 'style.css');
+            const cssResponse = await fetch(cssPath);
+            const cssText = await cssResponse.text();
+            setCssCode(cssText);
+        
+            const jsPath = data.path.replace('index.html', 'index.js');
+            const jsResponse = await fetch(jsPath);
+            
+            if (!jsResponse.ok) {
+                setJsCode('');
+            } else {
+                const text = await jsResponse.text();
+                setJsCode(text.includes('<!DOCTYPE html>') ? 'None' : text);
+            }
+        
+            setShowModal(true);
+        } catch (error) {
+            console.error('Error fetching files:', error);
+            alert('파일을 불러오는 중 오류가 발생했습니다.');
         }
-
-        const clonedResponse = jsResponse.clone();
-        const text = await clonedResponse.text();
-    
-        if (text.includes('<!DOCTYPE html>')) {
-            setJsCode('None');
-        } else {
-            setJsCode(text);
-        }
-    
-        setShowModal(true);
     };
 
     // 과제 제출 모달 열기
     const handleSubmitClick = (data, e) => {
         e.stopPropagation();
-        setSubmissionData(data);
+        if (completedAssignments.includes(data.name)) {
+            alert('이미 완료된 과제입니다.');
+            return;
+        }
+        if (submittedAssignments.includes(data.name)) {
+            alert('이미 제출된 과제입니다. 검토중입니다.');
+            return;
+        }
+        setError('');
+        setSuccess('');
+        setSubmissionData({
+            name: data.name,
+            path: data.path
+        });
     };
 
-    // 코드 보기 토글
     const toggleCode = () => {
         setShowCode((prev) => !prev);
     };
 
-    // 비밀번호 확인 후 코드 보기
     const toggleCodeWithPassword = () => {
         if (showCode) return;
         const password = prompt("비밀번호를 입력하세요:");
@@ -156,9 +216,10 @@ function MainPage() {
         }
     };
     
-    // 모달 닫기
     const closeModal = () => {
         setShowModal(false);
+        setShowCode(false);
+        setSelected(null);
     };
 
     // 데이터 필터링
@@ -168,37 +229,6 @@ function MainPage() {
         const matchesModule = selectedModule ? item.module === selectedModule : true;
         return matchesSearch && matchesLevel && matchesModule;
     });
-
-    // 사용자 이름 로드
-    useEffect(() => {
-        const storedName = localStorage.getItem('userName');
-        setUserName(storedName || '');
-        const handleLoginChange = () => {
-            const storedName = localStorage.getItem('userName');
-            setUserName(storedName || '');
-        };
-        window.addEventListener('loginChange', handleLoginChange);
-        return () => {
-            window.removeEventListener('loginChange', handleLoginChange);
-        };
-    }, []);
-
-    useEffect(() => {
-        const fetchCompletedAssignments = async () => {
-            const userName = localStorage.getItem('userName');
-            if (!userName) return;
-    
-            try {
-                const response = await fetch(`http://localhost:3001/api/completed-assignments/${userName}`);
-                const data = await response.json();
-                setCompletedAssignments(data.map(item => item.assignment_name));
-            } catch (error) {
-                console.error('완료된 과제 조회 실패:', error);
-            }
-        };
-    
-        fetchCompletedAssignments();
-    }, [userName]);
 
     return (
         <div className="main-page">
@@ -235,6 +265,7 @@ function MainPage() {
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>상태</th>
                                         <th>난이도</th>
                                         <th>모듈</th>
                                         <th>폴더명</th>
@@ -243,36 +274,40 @@ function MainPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {filteredData.map((item, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            {completedAssignments.includes(item.name) ? 
-                                                <span className="completion-check">✓</span> : 
-                                                null
-                                            }
-                                            Lv. {item.level}
-                                        </td>
-                                        <td>{item.module}모듈</td>
-                                        <td>{item.name}</td>
-                                        <td>{item.description}</td>
-                                        <td>
-                                            <button 
-                                                className="preview-btn"
-                                                onClick={(e) => handlePreview(item, e)}
-                                            >
-                                                미리보기
-                                            </button>
-                                            {!completedAssignments.includes(item.name) && (
+                                    {filteredData.map((item, index) => (
+                                        <tr key={index}>
+                                            <td className="status-cell">
+                                                {completedAssignments.includes(item.name) ? (
+                                                    <span className="status-icon completed" title="완료">✅</span>
+                                                ) : submittedAssignments.includes(item.name) ? (
+                                                    <span className="status-icon pending" title="검토중">⏳</span>
+                                                ) : (
+                                                    <span className="status-icon not-submitted" title="미제출">➖</span>
+                                                )}
+                                            </td>
+                                            <td>Lv. {item.level}</td>
+                                            <td>{item.module}모듈</td>
+                                            <td>{item.name}</td>
+                                            <td>{item.description}</td>
+                                            <td>
                                                 <button 
-                                                    className="submit-btn"
-                                                    onClick={(e) => handleSubmitClick(item, e)}
+                                                    className="preview-btn"
+                                                    onClick={(e) => handlePreview(item, e)}
                                                 >
-                                                    과제 제출
+                                                    미리보기
                                                 </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                                {!completedAssignments.includes(item.name) && 
+                                                 !submittedAssignments.includes(item.name) && (
+                                                    <button 
+                                                        className="submit-btn"
+                                                        onClick={(e) => handleSubmitClick(item, e)}
+                                                    >
+                                                        과제 제출
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
@@ -323,6 +358,16 @@ function MainPage() {
                                     
                                     <form onSubmit={handleSubmit} className="submit-form">
                                         <div className="form-group">
+                                            <label>과제명:</label>
+                                            <input
+                                                type="text"
+                                                value={submissionData.name}
+                                                disabled
+                                                className="disabled-input"
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
                                             <label>설명:</label>
                                             <textarea
                                                 value={description}
@@ -346,7 +391,7 @@ function MainPage() {
                                                     className="preview-button"
                                                     onClick={() => setShowPreviewModal(true)}
                                                 >
-                                                    이미지 미리보기
+                                                이미지 미리보기
                                                 </button>
                                             )}
                                         </div>
