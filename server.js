@@ -129,47 +129,174 @@ app.post('/api/login', (req, res) => {
             });
         });
     });
-    });
+});
+
+// 전체 모듈 목록 조회
+app.get('/api/modules', async (req, res) => {
+    try {
+        const [results] = await db.promise().query('SELECT * FROM iframe_data ORDER BY module, level, name');
+        res.json(results);
+    } catch (error) {
+        console.error('모듈 목록 조회 중 오류:', error);
+        res.status(500).json({ error: '모듈 목록 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 특정 모듈 조회
+app.get('/api/modules/:id', async (req, res) => {
+    try {
+        const [results] = await db.promise().query(
+            'SELECT * FROM iframe_data WHERE idx = ?',
+            [req.params.id]
+        );
+        
+        if (results.length === 0) {
+            return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
+        }
+        
+        res.json(results[0]);
+    } catch (error) {
+        console.error('모듈 조회 중 오류:', error);
+        res.status(500).json({ error: '모듈 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 모듈 데이터 저장
+app.post('/api/modules', async (req, res) => {
+    try {
+        const { level, module, name, description, path, title } = req.body;
+        
+        const [result] = await db.promise().query(
+            'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
+            [level, module, name, description, path, title]
+        );
+
+        res.status(201).json({
+            message: '모듈이 성공적으로 저장되었습니다.',
+            id: result.insertId
+        });
+    } catch (error) {
+        console.error('모듈 저장 중 오류:', error);
+        res.status(500).json({ error: '모듈 저장 중 오류가 발생했습니다.' });
+    }
+});
+
+// 모듈 데이터 수정
+app.put('/api/modules/:id', async (req, res) => {
+    try {
+        const { level, module, name, description, path, title } = req.body;
+        
+        const [result] = await db.promise().query(
+            'UPDATE iframe_data SET level = ?, module = ?, name = ?, description = ?, path = ?, title = ? WHERE idx = ?',
+            [level, module, name, description, path, title, req.params.id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
+        }
+
+        res.json({ message: '모듈이 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('모듈 수정 중 오류:', error);
+        res.status(500).json({ error: '모듈 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+// 모듈 데이터 삭제
+app.delete('/api/modules/:id', async (req, res) => {
+    try {
+        const [result] = await db.promise().query(
+            'DELETE FROM iframe_data WHERE idx = ?',
+            [req.params.id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
+        }
+
+        res.json({ message: '모듈이 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('모듈 삭제 중 오류:', error);
+        res.status(500).json({ error: '모듈 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+// 필터링된 모듈 목록 조회
+app.get('/api/modules/filter', async (req, res) => {
+    try {
+        const { level, module, search } = req.query;
+        let sql = 'SELECT * FROM iframe_data WHERE 1=1';
+        const params = [];
+
+        if (level) {
+            sql += ' AND level = ?';
+            params.push(parseInt(level));
+        }
+
+        if (module) {
+            sql += ' AND module = ?';
+            params.push(module);
+        }
+
+        if (search) {
+            sql += ' AND (name LIKE ? OR description LIKE ?)';
+            const searchTerm = `%${search}%`;
+            params.push(searchTerm, searchTerm);
+        }
+
+        sql += ' ORDER BY module, level, name';
+
+        const [results] = await db.promise().query(sql, params);
+        res.json(results);
+    } catch (error) {
+        console.error('모듈 목록 필터링 중 오류:', error);
+        res.status(500).json({ error: '모듈 목록 필터링 중 오류가 발생했습니다.' });
+    }
+});
 
 // 모듈 저장 API
 app.post('/api/save-module', async (req, res) => {
-    const { iframeData, files } = req.body;
+    try {
+        const { iframeData, files } = req.body;
 
-    if (!iframeData || !files) {
-        return res.status(400).json({ error: '잘못된 데이터 형식입니다.' });
-    }
+        if (!iframeData || !files) {
+            return res.status(400).json({ error: '잘못된 데이터 형식입니다.' });
+        }
 
-    const folderName = iframeData.path.split('/').slice(-2)[0];
-    if (!validateFileName(folderName)) {
-        return res.status(400).json({
-            error: '폴더명은 영문자, 숫자, 하이픈, 언더스코어만 사용할 수 있습니다.'
+        const folderName = iframeData.path.split('/').slice(-2)[0];
+        if (!validateFileName(folderName)) {
+            return res.status(400).json({
+                error: '폴더명은 영문자, 숫자, 하이픈, 언더스코어만 사용할 수 있습니다.'
+            });
+        }
+
+        // 파일 저장
+        const baseDir = path.join(__dirname, 'public');
+        const moduleDir = path.join(baseDir, path.dirname(iframeData.path));
+
+        await ensureDirectoryExists(moduleDir);
+
+        await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
+        await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
+        if (files.js) {
+            await fs.writeFile(path.join(moduleDir, 'index.js'), files.js, 'utf8');
+        }
+
+        // DB에 모듈 정보 저장
+        const [result] = await db.promise().query(
+            'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
+            [iframeData.level, iframeData.module, iframeData.name, iframeData.description, iframeData.path, iframeData.title]
+        );
+
+        res.status(200).json({
+            message: '모듈이 성공적으로 저장되었습니다.',
+            path: iframeData.path,
+            id: result.insertId
         });
+    } catch (error) {
+        console.error('모듈 저장 중 오류:', error);
+        res.status(500).json({ error: '모듈 저장 중 오류가 발생했습니다.' });
     }
-
-    const baseDir = path.join(__dirname, 'public');
-    const moduleDir = path.join(baseDir, path.dirname(iframeData.path));
-
-    await ensureDirectoryExists(moduleDir);
-
-    await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
-    await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
-    if (files.js) {
-        await fs.writeFile(path.join(moduleDir, 'index.js'), files.js, 'utf8');
-    }
-
-    await appendToIframeDataFile({
-        level: iframeData.level,
-        module: iframeData.module,
-        name: iframeData.name,
-        description: iframeData.description,
-        path: iframeData.path,
-        title: iframeData.title
-    });
-
-    res.status(200).json({
-        message: '모듈이 성공적으로 저장되었습니다.',
-        path: iframeData.path
-    });
 });
 
 // 모듈 삭제 API
