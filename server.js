@@ -225,32 +225,68 @@ app.delete('/api/modules/:id', async (req, res) => {
 app.get('/api/modules/filter', async (req, res) => {
     try {
         const { level, module, search } = req.query;
-        let sql = 'SELECT * FROM iframe_data WHERE 1=1';
+        let sql = 'SELECT * FROM iframe_data';
         const params = [];
+        const conditions = [];
 
         if (level) {
-            sql += ' AND level = ?';
+            conditions.push('level = ?');
             params.push(parseInt(level));
         }
 
         if (module) {
-            sql += ' AND module = ?';
+            conditions.push('module = ?');
             params.push(module);
         }
 
         if (search) {
-            sql += ' AND (name LIKE ? OR description LIKE ?)';
+            conditions.push('(name LIKE ? OR description LIKE ?)');
             const searchTerm = `%${search}%`;
             params.push(searchTerm, searchTerm);
         }
 
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+
         sql += ' ORDER BY module, level, name';
+
+        console.log('Executing SQL:', sql, params); // 디버깅용
 
         const [results] = await db.promise().query(sql, params);
         res.json(results);
     } catch (error) {
         console.error('모듈 목록 필터링 중 오류:', error);
-        res.status(500).json({ error: '모듈 목록 필터링 중 오류가 발생했습니다.' });
+        res.status(500).json({ 
+            error: '모듈 목록 필터링 중 오류가 발생했습니다.',
+            details: error.message 
+        });
+    }
+});
+
+// 사용자별 제출된 과제 조회 API
+app.get('/api/submissions/user/:userName', async (req, res) => {
+    try {
+        const { userName } = req.params;
+        const [results] = await db.promise().query(
+            'SELECT * FROM submissions WHERE user_name = ?',
+            [userName]
+        );
+        res.json(results);
+    } catch (error) {
+        console.error('사용자별 제출 과제 조회 중 오류:', error);
+        res.status(500).json({ error: '사용자별 제출 과제 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 모든 모듈 조회 API
+app.get('/api/modules', async (req, res) => {
+    try {
+        const [results] = await db.promise().query('SELECT * FROM iframe_data ORDER BY module, level, name');
+        res.json(results);
+    } catch (error) {
+        console.error('모듈 목록 조회 중 오류:', error);
+        res.status(500).json({ error: '모듈 목록 조회 중 오류가 발생했습니다.' });
     }
 });
 
