@@ -60,7 +60,7 @@ function DataPage() {
     return (
         <div className="data-page">
             <div className="content">
-                {userRole === 'admin' ? (
+                {(userRole === 'admin' || userRole === 'manager') ? (
                     <>
                         <h1>데이터 관리</h1>
                         <div className='search-area'>
