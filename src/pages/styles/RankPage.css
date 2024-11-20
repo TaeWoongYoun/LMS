@@ -1,0 +1,82 @@
+.rank-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.rank-container .rank-title {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    color: #2d3748;
+}
+
+.rank-container .rank-table-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.rank-container .rank-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rank-container .rank-table th,
+.rank-container .rank-table td {
+    padding: 1rem;
+    text-align: left;
+}
+
+.rank-container .rank-table th {
+    background-color: #f7fafc;
+    font-weight: 600;
+    color: #4a5568;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.rank-container .rank-table tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.rank-container .rank-table tr:hover {
+    background-color: #f3f4f6;
+}
+
+.rank-container .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.5rem;
+    color: #4a5568;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .rank-container .rank-container {
+        padding: 1rem;
+    }
+
+    .rank-container .rank-title {
+        font-size: 2rem;
+    }
+
+    .rank-container .rank-table th,
+    .rank-container .rank-table td {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .rank-container .rank-table-container {
+        overflow-x: auto;
+    }
+
+    .rank-container .rank-table {
+        min-width: 600px;
+    }
+}

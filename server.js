@@ -571,6 +571,83 @@ app.delete('/api/submissions/:idx', (req, res) => {
     });
 });
 
+
+const TIERS = {
+    BRONZE: { name: '브론즈', minScore: 0, maxScore: 29 },
+    SILVER: { name: '실버', minScore: 30, maxScore: 59 },
+    GOLD: { name: '골드', minScore: 60, maxScore: 99 },
+    PLATINUM: { name: '플래티넘', minScore: 100, maxScore: 149 },
+    DIAMOND: { name: '다이아몬드', minScore: 150, maxScore: Infinity }
+};
+
+// 사용자의 티어 계산 함수
+function calculateTier(totalScore) {
+    for (const [tier, range] of Object.entries(TIERS)) {
+        if (totalScore >= range.minScore && totalScore <= range.maxScore) {
+            return {
+                tier: range.name, // 변경된 부분
+                nextTier: getNextTierInfo(totalScore)
+            };
+        }
+    }
+    return null;
+}
+
+// 다음 티어까지 남은 점수 계산
+function getNextTierInfo(currentScore) {
+const tiers = Object.entries(TIERS);
+for (let i = 0; i < tiers.length - 1; i++) {
+    const currentTier = tiers[i][1];
+    const nextTier = tiers[i + 1][1];
+    if (currentScore >= currentTier.minScore && currentScore < nextTier.minScore) {
+    return {
+        name: nextTier.name,
+        remainingScore: nextTier.minScore - currentScore
+    };
+    }
+}
+return null;
+}
+
+// 랭킹 정보 조회 API
+app.get('/api/rankings', async (req, res) => {
+try {
+    const [results] = await db.promise().query(`
+    SELECT 
+        u.name,
+        u.id,
+        COUNT(DISTINCT ca.assignment_name) as completed_assignments,
+        COALESCE(SUM(
+        CASE 
+            WHEN i.level = 0 THEN 1
+            WHEN i.level = 1 THEN 2
+            WHEN i.level = 2 THEN 4
+            WHEN i.level = 3 THEN 6
+            WHEN i.level = 4 THEN 10
+            WHEN i.level = 5 THEN 50
+        END
+        ), 0) as total_score
+    FROM user u
+    LEFT JOIN completed_assignments ca ON u.name = ca.user_name
+    LEFT JOIN iframe_data i ON ca.assignment_name = i.name
+    WHERE u.id != 'admin'
+    GROUP BY u.name, u.id
+    ORDER BY total_score DESC, completed_assignments DESC
+    `);
+    
+    const rankings = results.map((user, index) => ({
+    ...user,
+    rank: index + 1,
+    ...calculateTier(user.total_score)
+    }));
+
+    res.json(rankings);
+} catch (error) {
+    console.error('랭킹 조회 중 오류:', error);
+    res.status(500).json({ error: '랭킹 조회 중 오류가 발생했습니다.' });
+}
+});
+
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
 
