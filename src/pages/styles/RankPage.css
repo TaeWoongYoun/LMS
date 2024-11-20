@@ -2,6 +2,7 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    height: calc(100vh - 140px);
 }
 
 .rank-container .rank-title {
