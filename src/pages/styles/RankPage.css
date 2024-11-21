@@ -42,15 +42,16 @@
 }
 
 .tier-image-container {
-    width: 400px;
-    height: 400px;
+    width: 350px;
+    height: 350px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .tier-image {
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
     height: auto;
     transition: transform 0.3s ease;
     border-radius: 10px;
