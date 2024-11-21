@@ -73,6 +73,7 @@ function Header() {
                         <>
                             <li><Link to="/check">Check</Link></li>
                             <li><Link to="/user">User</Link></li>
+                            <li><Link to="/rank">Rank</Link></li>
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                         </>
                     ) : loginStatus === 'manager' ? (
@@ -86,6 +87,7 @@ function Header() {
                     ) : (
                         <>
                             <li><Link to="/welcome">Welcome</Link></li>
+                            <li><Link to="/rank">Rank</Link></li>
                             <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                         </>
                     )}
