@@ -2,6 +2,9 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    height: calc(100vh - 140px);
+    display: grid;
+    place-content: center;
 }
 
 .tab-container {
@@ -16,20 +19,15 @@
     border: none;
     border-radius: 8px;
     background-color: #f3f4f6;
-    color: #4b5563;
-    font-weight: 600;
+    color: #111;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-size: 14px;
 }
 
 .tab-button.active {
     background-color: #3b82f6;
     color: white;
-}
-
-.tab-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .my-tier-container {
@@ -44,8 +42,8 @@
 }
 
 .tier-image-container {
-    width: 200px;
-    height: 200px;
+    width: 400px;
+    height: 400px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -55,6 +53,7 @@
     max-width: 100%;
     height: auto;
     transition: transform 0.3s ease;
+    border-radius: 10px;
 }
 
 .tier-image:hover {
@@ -80,9 +79,8 @@
 /* 랭킹 테이블 스타일 개선 */
 .rank-table-container {
     background-color: white;
-    border-radius: 16px;
+    border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
 }
 
 .rank-table {
@@ -95,12 +93,12 @@
     color: #1f2937;
     font-weight: 600;
     padding: 1rem;
-    text-align: left;
+    text-align: center;
+    border: 1px solid black;
 }
 
 .rank-table td {
     padding: 1rem;
-    border-bottom: 1px solid #e5e7eb;
 }
 
 .rank-table tr:hover {
