@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import './styles/DeletePage.css'
 
 function DataPage() {
     const [searchTerm, setSearchTerm] = useState(''); 
