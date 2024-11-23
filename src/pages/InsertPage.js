@@ -72,6 +72,7 @@ const InsertPage = () => {
         }
       };
 
+      // API 엔드포인트로 데이터 전송
       const response = await fetch('http://localhost:3001/api/save-module', {
         method: 'POST',
         headers: {
@@ -86,7 +87,9 @@ const InsertPage = () => {
         throw new Error(data.error || '서버 응답 오류');
       }
 
-      setSuccess('데이터가 성공적으로 저장되었습니다!');
+      setSuccess('모듈이 성공적으로 저장되었습니다!');
+      
+      // 폼 초기화
       setFormData({
         level: '',
         module: '',
