@@ -15,12 +15,14 @@
     overflow-y: scroll;
     font-size: 20px;
 }
-.user-area th, .user-area td{
+
+.user-area td{
     border: 1px solid #0F172A;
 }
 
 .user-area th{
     background-color: #0F172A;
+    border: 1px solid #fff;
 }
 
 .user-area button{
