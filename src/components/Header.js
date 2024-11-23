@@ -71,6 +71,8 @@ function Header() {
                         </>
                     ) : loginStatus === 'admin' ? (
                         <>
+                            <li><Link to="/insert">Insert</Link></li>
+                            <li><Link to="/delete">Delete</Link></li>
                             <li><Link to="/check">Check</Link></li>
                             <li><Link to="/user">User</Link></li>
                             <li><Link to="/rank">Rank</Link></li>
