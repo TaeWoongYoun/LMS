@@ -152,6 +152,7 @@ table {
 th{
   background-color: #0F172A;
   color: #fff;
+  border: 1px solid #fff;
 }
 
 tr:hover{
@@ -160,12 +161,12 @@ tr:hover{
 }
 
 th, td{
-  border: 1px solid #0F172A;
   padding: 5px 10px;
 }
 
 td{
   height: 50px;
+  border: 1px solid #0F172A;
 }
 
 .modal-area {
