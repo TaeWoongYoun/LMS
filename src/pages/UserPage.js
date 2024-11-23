@@ -128,7 +128,7 @@ const UserPage = () => {
                                         </select>
                                     </td>
                                     <td>
-                                        <button onClick={() => handleDelete(user.idx)} className="delete-button">삭제</button>
+                                        <button onClick={() => handleDelete(user.idx)} className="delete-button">회원 퇴출</button>
                                     </td>
                                 </tr>
                             ))}
