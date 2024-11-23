@@ -1,28 +1,26 @@
 .rank-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+    position: relative;
+    width: 100%;
     height: calc(100vh - 140px);
     display: grid;
     place-content: center;
 }
 
 .tab-container {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
+    position: absolute;
+    top: 20px;
+    right: 20px;
 }
 
 .tab-button {
-    padding: 0.75rem 2rem;
+    padding: 10px 20px;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
     background-color: #f3f4f6;
     color: #111;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .tab-button.active {
@@ -38,7 +36,7 @@
     padding: 2rem;
     background-color: white;
     border-radius: 16px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px #888;
 }
 
 .tier-image-container {
@@ -79,9 +77,7 @@
 
 /* 랭킹 테이블 스타일 개선 */
 .rank-table-container {
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 1440px;
 }
 
 .rank-table {
@@ -90,28 +86,20 @@
 }
 
 .rank-table th {
-    background-color: #f3f4f6;
-    color: #1f2937;
-    font-weight: 600;
-    padding: 1rem;
+    background-color: #0F172A;
+    color: #fff;
+    padding: 15px 0;
     text-align: center;
-    border: 1px solid black;
+    border: 1px solid #fff;
 }
 
 .rank-table td {
-    padding: 1rem;
+    padding: 15px 0;
 }
 
 .rank-table tr:hover {
     background-color: #f9fafb;
 }
-
-/* 티어별 색상 */
-.tier-bronze { color: #b45309; }
-.tier-silver { color: #6b7280; }
-.tier-gold { color: #d97706; }
-.tier-platinum { color: #2563eb; }
-.tier-diamond { color: #7c3aed; }
 
 /* 로딩 상태 */
 .loading {
