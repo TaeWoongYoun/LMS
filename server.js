@@ -552,6 +552,28 @@ try {
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
 
+// iframe_data 삭제 API
+app.delete('/api/iframe-data/:idx', async (req, res) => {
+    try {
+        const { idx } = req.params;
+        
+        const [result] = await db.promise().query(
+            'DELETE FROM iframe_data WHERE idx = ?',
+            [idx]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '해당 데이터를 찾을 수 없습니다.' });
+        }
+
+        res.json({ message: '성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('데이터 삭제 중 오류:', error);
+        res.status(500).json({ error: '데이터 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+
 app.get('/', (req, res) => {
     res.send('Hello, World!');
 });

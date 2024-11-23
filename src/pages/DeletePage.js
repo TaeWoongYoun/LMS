@@ -1,5 +1,4 @@
-import iframeData from "../data/iframeData"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 
 function DataPage() {
@@ -7,7 +6,9 @@ function DataPage() {
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState(''); 
     const [userRole, setUserRole] = useState('');
-    const [data, setData] = useState(iframeData);
+    const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const storedRole = localStorage.getItem('userRole');
@@ -24,38 +25,60 @@ function DataPage() {
         };
     }, []);
 
+    const fetchData = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            const queryParams = new URLSearchParams({
+                level: selectedLevel,
+                module: selectedModule,
+                search: searchTerm
+            }).toString();
+
+            const response = await fetch(`http://localhost:3001/api/modules?${queryParams}`);
+            if (!response.ok) {
+                throw new Error('데이터를 불러오는데 실패했습니다.');
+            }
+
+            const moduleData = await response.json();
+            setData(moduleData);
+            setError(null);
+        } catch (err) {
+            setError('데이터를 불러오는데 실패했습니다: ' + err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedLevel, selectedModule, searchTerm]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    // 데이터 삭제 처리 수정
     const handleDelete = async (item) => {
         if (window.confirm('정말로 이 데이터를 삭제하시겠습니까?')) {
             try {
-                const response = await fetch('http://localhost:3001/api/delete-module', {
+                // idx를 사용하여 DELETE 요청
+                const response = await fetch(`http://localhost:3001/api/iframe-data/${item.idx}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        path: item.path,
-                        name: item.name
-                    })
+                    }
                 });
 
-                if (response.ok) {
-                    setData(prevData => prevData.filter(dataItem => dataItem.path !== item.path));
-                    alert('성공적으로 삭제되었습니다.');
-                } else {
-                    alert('삭제 중 오류가 발생했습니다.');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '삭제 중 오류가 발생했습니다.');
                 }
+
+                // 삭제 성공 후 데이터 새로고침
+                await fetchData();
+                alert('성공적으로 삭제되었습니다.');
             } catch (error) {
-                alert('삭제 중 오류가 발생했습니다.');
+                console.error('Delete error:', error);
+                alert(error.message || '삭제 중 오류가 발생했습니다.');
             }
         }
     };
-
-    const filteredData = data.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesLevel = selectedLevel ? item.level === parseInt(selectedLevel) : true;
-        const matchesModule = selectedModule ? item.module === selectedModule : true;
-        return matchesSearch && matchesLevel && matchesModule;
-    });
 
     return (
         <div className="data-page">
@@ -65,7 +88,10 @@ function DataPage() {
                         <h1>데이터 관리</h1>
                         <div className='search-area'>
                             <div>
-                                <select onChange={(e) => setSelectedLevel(e.target.value)} defaultValue="">
+                                <select 
+                                    value={selectedLevel}
+                                    onChange={(e) => setSelectedLevel(e.target.value)}
+                                >
                                     <option value="">난이도(전체)</option>
                                     <option value="0">Lv. 0</option>
                                     <option value="1">Lv. 1</option>
@@ -74,7 +100,10 @@ function DataPage() {
                                     <option value="4">Lv. 4</option>
                                     <option value="5">Lv. 5</option>
                                 </select>
-                                <select onChange={(e) => setSelectedModule(e.target.value)} defaultValue="">
+                                <select 
+                                    value={selectedModule}
+                                    onChange={(e) => setSelectedModule(e.target.value)}
+                                >
                                     <option value="">모듈(전체)</option>
                                     <option value="A">A모듈</option>
                                     <option value="B">B모듈</option>
@@ -88,37 +117,43 @@ function DataPage() {
                             />
                         </div>
 
-                        <div className="table-area">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>난이도</th>
-                                        <th>모듈</th>
-                                        <th>폴더명</th>
-                                        <th>부가설명</th>
-                                        <th>관리</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredData.map((item, index) => (
-                                        <tr key={index}>
-                                            <td>Lv. {item.level}</td>
-                                            <td>{item.module}모듈</td>
-                                            <td>{item.name}</td>
-                                            <td>{item.description}</td>
-                                            <td>
-                                                <button 
-                                                    onClick={() => handleDelete(item)}
-                                                    className="delete-btn"
-                                                >
-                                                    삭제
-                                                </button>
-                                            </td>
+                        {error && <div className="error-message">{error}</div>}
+                        
+                        {isLoading ? (
+                            <div className="loading-message">데이터를 불러오는 중...</div>
+                        ) : (
+                            <div className="table-area">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>난이도</th>
+                                            <th>모듈</th>
+                                            <th>폴더명</th>
+                                            <th>부가설명</th>
+                                            <th>관리</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {data.map((item) => (
+                                            <tr key={item.idx}>
+                                                <td>Lv. {item.level}</td>
+                                                <td>{item.module}모듈</td>
+                                                <td>{item.name}</td>
+                                                <td>{item.description}</td>
+                                                <td>
+                                                    <button 
+                                                        onClick={() => handleDelete(item)}
+                                                        className="delete-btn"
+                                                    >
+                                                        삭제
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <div className="access-denied">
