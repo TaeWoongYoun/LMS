@@ -131,117 +131,27 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// 전체 모듈 목록 조회
 app.get('/api/modules', async (req, res) => {
-    try {
-        const [results] = await db.promise().query('SELECT * FROM iframe_data ORDER BY module, level, name');
-        res.json(results);
-    } catch (error) {
-        console.error('모듈 목록 조회 중 오류:', error);
-        res.status(500).json({ error: '모듈 목록 조회 중 오류가 발생했습니다.' });
-    }
-});
-
-// 특정 모듈 조회
-app.get('/api/modules/:id', async (req, res) => {
-    try {
-        const [results] = await db.promise().query(
-            'SELECT * FROM iframe_data WHERE idx = ?',
-            [req.params.id]
-        );
-        
-        if (results.length === 0) {
-            return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
-        }
-        
-        res.json(results[0]);
-    } catch (error) {
-        console.error('모듈 조회 중 오류:', error);
-        res.status(500).json({ error: '모듈 조회 중 오류가 발생했습니다.' });
-    }
-});
-
-// 모듈 데이터 저장
-app.post('/api/modules', async (req, res) => {
-    try {
-        const { level, module, name, description, path, title } = req.body;
-        
-        const [result] = await db.promise().query(
-            'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
-            [level, module, name, description, path, title]
-        );
-
-        res.status(201).json({
-            message: '모듈이 성공적으로 저장되었습니다.',
-            id: result.insertId
-        });
-    } catch (error) {
-        console.error('모듈 저장 중 오류:', error);
-        res.status(500).json({ error: '모듈 저장 중 오류가 발생했습니다.' });
-    }
-});
-
-// 모듈 데이터 수정
-app.put('/api/modules/:id', async (req, res) => {
-    try {
-        const { level, module, name, description, path, title } = req.body;
-        
-        const [result] = await db.promise().query(
-            'UPDATE iframe_data SET level = ?, module = ?, name = ?, description = ?, path = ?, title = ? WHERE idx = ?',
-            [level, module, name, description, path, title, req.params.id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
-        }
-
-        res.json({ message: '모듈이 성공적으로 수정되었습니다.' });
-    } catch (error) {
-        console.error('모듈 수정 중 오류:', error);
-        res.status(500).json({ error: '모듈 수정 중 오류가 발생했습니다.' });
-    }
-});
-
-// 모듈 데이터 삭제
-app.delete('/api/modules/:id', async (req, res) => {
-    try {
-        const [result] = await db.promise().query(
-            'DELETE FROM iframe_data WHERE idx = ?',
-            [req.params.id]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
-        }
-
-        res.json({ message: '모듈이 성공적으로 삭제되었습니다.' });
-    } catch (error) {
-        console.error('모듈 삭제 중 오류:', error);
-        res.status(500).json({ error: '모듈 삭제 중 오류가 발생했습니다.' });
-    }
-});
-
-// 필터링된 모듈 목록 조회
-app.get('/api/modules/filter', async (req, res) => {
     try {
         const { level, module, search } = req.query;
         let sql = 'SELECT * FROM iframe_data';
         const params = [];
         const conditions = [];
 
-        if (level) {
+        // 빈 문자열 체크를 추가하여 실제 값이 있는 경우만 필터링
+        if (level !== undefined && level !== '') {
             conditions.push('level = ?');
             params.push(parseInt(level));
         }
 
-        if (module) {
+        if (module && module !== '') {
             conditions.push('module = ?');
             params.push(module);
         }
 
-        if (search) {
+        if (search && search.trim() !== '') {
             conditions.push('(name LIKE ? OR description LIKE ?)');
-            const searchTerm = `%${search}%`;
+            const searchTerm = `%${search.trim()}%`;
             params.push(searchTerm, searchTerm);
         }
 
@@ -251,15 +161,17 @@ app.get('/api/modules/filter', async (req, res) => {
 
         sql += ' ORDER BY module, level, name';
 
-        console.log('Executing SQL:', sql, params); // 디버깅용
-
         const [results] = await db.promise().query(sql, params);
+        
+        // 결과 로깅
+        
         res.json(results);
     } catch (error) {
-        console.error('모듈 목록 필터링 중 오류:', error);
+        console.error('모듈 목록 조회 중 오류:', error);
         res.status(500).json({ 
-            error: '모듈 목록 필터링 중 오류가 발생했습니다.',
-            details: error.message 
+            error: '모듈 목록 조회 중 오류가 발생했습니다.',
+            details: error.message,
+            stack: error.stack // 개발 중에만 사용하고 프로덕션에서는 제거
         });
     }
 });
@@ -276,17 +188,6 @@ app.get('/api/submissions/user/:userName', async (req, res) => {
     } catch (error) {
         console.error('사용자별 제출 과제 조회 중 오류:', error);
         res.status(500).json({ error: '사용자별 제출 과제 조회 중 오류가 발생했습니다.' });
-    }
-});
-
-// 모든 모듈 조회 API
-app.get('/api/modules', async (req, res) => {
-    try {
-        const [results] = await db.promise().query('SELECT * FROM iframe_data ORDER BY module, level, name');
-        res.json(results);
-    } catch (error) {
-        console.error('모듈 목록 조회 중 오류:', error);
-        res.status(500).json({ error: '모듈 목록 조회 중 오류가 발생했습니다.' });
     }
 });
 
