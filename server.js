@@ -573,6 +573,34 @@ app.delete('/api/iframe-data/:idx', async (req, res) => {
     }
 });
 
+// 아이디 중복 확인 API
+app.post('/api/check-id', (req, res) => {
+    const { id } = req.body;
+
+    // 아이디 유효성 검사
+    const idRegex = /^[a-zA-Z0-9]{4,20}$/;
+    if (!idRegex.test(id)) {
+        return res.status(400).json({ 
+            available: false,
+            message: '아이디는 4-20자의 영문자와 숫자만 사용 가능합니다.'
+        });
+    }
+
+    const sql = 'SELECT COUNT(*) as count FROM user WHERE id = ?';
+    db.query(sql, [id], (err, results) => {
+        if (err) {
+            return res.status(500).json({ 
+                error: '아이디 중복 확인 중 오류가 발생했습니다.' 
+            });
+        }
+
+        const isAvailable = results[0].count === 0;
+        res.json({ 
+            available: isAvailable,
+            message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.'
+        });
+    });
+});
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');

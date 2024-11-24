@@ -56,7 +56,7 @@
     border-width: 2px;
 }
 
-.main-area button {
+.main-area .submit-btn {
     background-color: #007bff;
     color: white;
     padding: 18px 30px;
@@ -68,11 +68,11 @@
     margin-top: 20px;
 }
 
-.main-area button:hover {
+.main-area .submit-btn:hover {
     background-color: #0056b3;
 }
 
-.main-area button:disabled {
+.main-area .submit-btn:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
