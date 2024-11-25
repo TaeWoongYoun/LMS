@@ -99,46 +99,22 @@ function JoinPage() {
                 <h1>회원가입</h1>
                 <div>
                     <label>ID: </label>
-                    <input 
-                        type="text" 
-                        value={id} 
-                        onChange={handleIdChange}
-                        required 
-                    />
-                    <button 
-                        type="button" 
-                        onClick={checkIdDuplicate}
-                        className="check-button"
-                    >
-                        중복확인
-                    </button>
+                    <div className='id-box'>
+                        <input type="text" className='input-id' value={id} onChange={handleIdChange}required />
+                        <button type="button" onClick={checkIdDuplicate}className="check-button">중복확인</button>
+                    </div>
                 </div>
                 <div>
                     <label>Name: </label>
-                    <input 
-                        type="text" 
-                        value={name} 
-                        onChange={(e) => setName(e.target.value)} 
-                        required 
-                    />
+                    <input type="text" className='input-name' value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
                 <div>
                     <label>Password: </label>
-                    <input 
-                        type="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                    />
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
                 <div>
                     <label>Confirm Password: </label>
-                    <input 
-                        type="password" 
-                        value={confirmPassword} 
-                        onChange={(e) => setConfirmPassword(e.target.value)} 
-                        required 
-                    />
+                    <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
                 </div>
                 <button type="submit" className='submit-btn'>Sign Up</button>
             </form>

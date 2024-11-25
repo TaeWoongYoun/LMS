@@ -40,23 +40,13 @@ function LoginPage() {
                 <h1>로그인</h1>
                 <div>
                     <label>ID: </label>
-                    <input 
-                        type="text" 
-                        value={id} 
-                        onChange={(e) => setId(e.target.value)} 
-                        required 
-                    />
+                    <input type="text" className='input-name' value={id} onChange={(e) => setId(e.target.value)} required />
                 </div>
                 <div>
                     <label>Password: </label>
-                    <input 
-                        type="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        required 
-                    />
+                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
-                <button type="submit">Login</button>
+                <button type="submit" className='submit-btn'>Login</button>
             </form>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             {success && <p style={{ color: 'green' }}>{success}</p>}
