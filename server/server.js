@@ -19,27 +19,54 @@ const __dirname = dirname(__filename);
 
 dotenv.config();
 
+// Express 앱 설정
+const app = express();
+const port = 3001;
+
 // GitHub API 설정
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_API = 'https://api.github.com';
 
-db.connect((err) => {
-    if (err) {
-        console.error('데이터베이스 연결 실패:', err);
-        return;
-    }
-    console.log('데이터베이스 연결 성공');
+const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
 });
 
-app.listen(port, () => {
-    console.log(`서버가 ${port} 포트에서 실행 중입니다.`);
+// 데이터베이스 설정
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'LMS'
 });
 
+// 미들웨어 설정
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
-// 폴더 존재 여부 확인 및 생성 함수
+// Multer 설정
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('이미지 파일만 업로드 가능합니다.'));
+        }
+    }
+});
+
+// 유틸리티 함수
 async function ensureDirectoryExists(dirPath) {
     try {
         await fs.access(dirPath);
@@ -48,57 +75,70 @@ async function ensureDirectoryExists(dirPath) {
     }
 }
 
-// 파일 이름 검증 함수
 function validateFileName(fileName) {
     const validPattern = /^[a-zA-Z0-9-_]+$/;
     return validPattern.test(fileName);
 }
 
-// iframeData 파일에 데이터 추가 함수
-async function appendToIframeDataFile(newData) {
-    const iframeDataPath = path.join(__dirname, 'src', 'data', 'iframeData.js');
-    let content = '';
+async function isWriteable(path) {
     try {
-        content = await fs.readFile(iframeDataPath, 'utf8');
-    } catch (err) {
-        if (err.code !== 'ENOENT') {
-            throw err;
-        }
-        content = 'const iframeData = [];\n\nexport default iframeData;';
+        await fs.access(path, fs.constants.W_OK);
+        return true;
+    } catch {
+        return false;
     }
-
-    const lastArrayIndex = content.lastIndexOf(']');
-    if (lastArrayIndex === -1) {
-        throw new Error('유효하지 않은 파일 형식');
-    }
-
-    const newEntry = `{ level: ${newData.level}, module: "${newData.module}", name: "${newData.name}", description: "${newData.description}", path: "${newData.path}", title: "${newData.title}" }`;
-    const separator = content.slice(0, lastArrayIndex).trim().endsWith('[') ? '' : ',\n';
-    const newContent = content.slice(0, lastArrayIndex) + (separator + newEntry + '\n];\n\nexport default iframeData;');
-
-    await fs.writeFile(iframeDataPath, newContent, 'utf8');
 }
 
-// 회원가입 API
-app.post('/api/register', (req, res) => {
-    const { id, pw, name } = req.body;
+const TIERS = {
+    BRONZE: { name: '브론즈', minScore: 0, maxScore: 29 },
+    SILVER: { name: '실버', minScore: 30, maxScore: 59 },
+    GOLD: { name: '골드', minScore: 60, maxScore: 99 },
+    PLATINUM: { name: '플래티넘', minScore: 100, maxScore: 149 },
+    DIAMOND: { name: '다이아몬드', minScore: 150, maxScore: Infinity }
+};
 
-    bcrypt.hash(pw, 10, (err, hashedPassword) => {
-        if (err) {
-            return res.status(500).json({ error: '비밀번호 처리 중 오류가 발생했습니다.' });
+function calculateTier(totalScore) {
+    for (const [tier, range] of Object.entries(TIERS)) {
+        if (totalScore >= range.minScore && totalScore <= range.maxScore) {
+            return {
+                tier: range.name,
+                nextTier: getNextTierInfo(totalScore)
+            };
         }
+    }
+    return null;
+}
 
-        const sql = 'INSERT INTO user (id, pw, name) VALUES (?, ?, ?)';
-        db.query(sql, [id, hashedPassword, name], (err, result) => {
-            if (err) {
-                return res.status(500).json({ error: '사용자 추가 중 오류가 발생했습니다.' });
-            }
-            res.status(201).json({ message: '회원가입 성공' });
-        });
-    });
+function getNextTierInfo(currentScore) {
+    const tiers = Object.entries(TIERS);
+    for (let i = 0; i < tiers.length - 1; i++) {
+        const currentTier = tiers[i][1];
+        const nextTier = tiers[i + 1][1];
+        if (currentScore >= currentTier.minScore && currentScore < nextTier.minScore) {
+            return {
+                name: nextTier.name,
+                remainingScore: nextTier.minScore - currentScore
+            };
+        }
+    }
+    return null;
+}
+// 인증 관련 API
+app.post('/api/register', async (req, res) => {
+    const { id, pw, name, githubId } = req.body;
+
+    try {
+        const hashedPassword = await bcrypt.hash(pw, 10);
+        const sql = 'INSERT INTO user (id, pw, name, github_id) VALUES (?, ?, ?, ?)';
+        
+        await db.promise().query(sql, [id, hashedPassword, name, githubId]);
+        res.status(201).json({ message: '회원가입 성공' });
+    } catch (err) {
+        console.error('회원가입 오류:', err);
+        res.status(500).json({ error: '사용자 추가 중 오류가 발생했습니다.' });
+    }
 });
 
-// 로그인 API
 app.post('/api/login', async (req, res) => {
     const { id, pw } = req.body;
 
@@ -129,7 +169,8 @@ app.post('/api/login', async (req, res) => {
             message: '로그인 성공',
             token,
             name: user.name,
-            role: user.role
+            role: user.role,
+            githubId: user.github_id
         });
     } catch (error) {
         console.error('로그인 오류:', error);
@@ -137,52 +178,206 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.get('/api/modules', async (req, res) => {
+app.post('/api/check-id', async (req, res) => {
+    const { id } = req.body;
+
     try {
-        const { level, module, search } = req.query;
-        let sql = 'SELECT * FROM iframe_data';
-        const params = [];
-        const conditions = [];
-
-        // 빈 문자열 체크를 추가하여 실제 값이 있는 경우만 필터링
-        if (level !== undefined && level !== '') {
-            conditions.push('level = ?');
-            params.push(parseInt(level));
+        const idRegex = /^[a-zA-Z0-9]{4,20}$/;
+        if (!idRegex.test(id)) {
+            return res.status(400).json({ 
+                available: false,
+                message: '아이디는 4-20자의 영문자와 숫자만 사용 가능합니다.'
+            });
         }
 
-        if (module && module !== '') {
-            conditions.push('module = ?');
-            params.push(module);
-        }
+        const [results] = await db.promise().query(
+            'SELECT COUNT(*) as count FROM user WHERE id = ?',
+            [id]
+        );
 
-        if (search && search.trim() !== '') {
-            conditions.push('(name LIKE ? OR description LIKE ?)');
-            const searchTerm = `%${search.trim()}%`;
-            params.push(searchTerm, searchTerm);
-        }
-
-        if (conditions.length > 0) {
-            sql += ' WHERE ' + conditions.join(' AND ');
-        }
-
-        sql += ' ORDER BY module, level, name';
-
-        const [results] = await db.promise().query(sql, params);
-        
-        // 결과 로깅
-        
-        res.json(results);
-    } catch (error) {
-        console.error('모듈 목록 조회 중 오류:', error);
-        res.status(500).json({ 
-            error: '모듈 목록 조회 중 오류가 발생했습니다.',
-            details: error.message,
-            stack: error.stack // 개발 중에만 사용하고 프로덕션에서는 제거
+        const isAvailable = results[0].count === 0;
+        res.json({ 
+            available: isAvailable,
+            message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.'
         });
+    } catch (err) {
+        console.error('아이디 중복 확인 오류:', err);
+        res.status(500).json({ error: '아이디 중복 확인 중 오류가 발생했습니다.' });
     }
 });
 
-// 사용자별 제출된 과제 조회 API
+// GitHub 관련 API
+app.post('/api/project-url', async (req, res) => {
+    const { userName, assignmentName, projectUrl, code } = req.body;
+
+    try {
+        // GitHub 저장소 정보 파싱
+        const repoUrl = new URL(projectUrl);
+        const [, owner, repo] = repoUrl.pathname.split('/');
+        const repoName = repo.replace('.git', '');
+
+        try {
+            // Base64로 파일 내용 인코딩하고 GitHub에 업로드
+            const files = [
+                {
+                    path: `${assignmentName}/index.html`,
+                    content: code.html,
+                    message: `Add index.html for ${assignmentName}`
+                },
+                {
+                    path: `${assignmentName}/style.css`,
+                    content: code.css,
+                    message: `Add style.css for ${assignmentName}`
+                }
+            ];
+
+            if (code.js) {
+                files.push({
+                    path: `${assignmentName}/index.js`,
+                    content: code.js,
+                    message: `Add index.js for ${assignmentName}`
+                });
+            }
+
+            // 각 파일을 GitHub에 업로드
+            for (const file of files) {
+                try {
+                    const content = Buffer.from(file.content).toString('base64');
+                    
+                    // 파일이 이미 존재하는지 확인
+                    try {
+                        await octokit.repos.getContent({
+                            owner,
+                            repo: repoName,
+                            path: file.path
+                        });
+
+                        // 파일이 존재하면 업데이트
+                        const existingFile = await octokit.repos.getContent({
+                            owner,
+                            repo: repoName,
+                            path: file.path
+                        });
+
+                        await octokit.repos.createOrUpdateFileContents({
+                            owner,
+                            repo: repoName,
+                            path: file.path,
+                            message: `Update ${file.path}`,
+                            content: content,
+                            sha: existingFile.data.sha,
+                            branch: 'main'
+                        });
+                    } catch (error) {
+                        if (error.status === 404) {
+                            // 파일이 없으면 새로 생성
+                            await octokit.repos.createOrUpdateFileContents({
+                                owner,
+                                repo: repoName,
+                                path: file.path,
+                                message: file.message,
+                                content: content,
+                                branch: 'main'
+                            });
+                        } else {
+                            throw error;
+                        }
+                    }
+                    
+                    console.log(`Successfully uploaded ${file.path}`);
+                } catch (error) {
+                    console.error(`Error uploading ${file.path}:`, error);
+                    throw error;
+                }
+            }
+
+            // DB에 URL 저장
+            await db.promise().query(
+                'INSERT INTO completed_assignments (user_name, assignment_name, github_url) VALUES (?, ?, ?) ' +
+                'ON DUPLICATE KEY UPDATE github_url = VALUES(github_url)',
+                [userName, assignmentName, projectUrl]
+            );
+
+            res.json({
+                message: '코드가 성공적으로 GitHub에 업로드되었습니다.',
+                githubUrl: `${projectUrl}/tree/main/${assignmentName}`
+            });
+        } catch (error) {
+            console.error('GitHub 업로드 오류:', error);
+            res.status(500).json({
+                error: 'GitHub 업로드 중 오류가 발생했습니다.',
+                details: error.message
+            });
+        }
+    } catch (error) {
+        console.error('URL 처리 오류:', error);
+        res.status(400).json({ error: '잘못된 GitHub URL 형식입니다.' });
+    }
+});
+
+app.get('/api/project-url/:userName/:assignmentName', async (req, res) => {
+    const { userName, assignmentName } = req.params;
+
+    try {
+        const [results] = await db.promise().query(
+            'SELECT github_url as projectUrl FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
+            [userName, assignmentName]
+        );
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: '등록된 URL을 찾을 수 없습니다.' });
+        }
+
+        res.json({ projectUrl: results[0].projectUrl });
+    } catch (error) {
+        console.error('URL 조회 오류:', error);
+        res.status(500).json({ error: 'URL 조회 중 오류가 발생했습니다.' });
+    }
+});
+// 과제 관련 API
+app.post('/api/submit', upload.single('image'), async (req, res) => {
+    const { userName, description, assignmentName, assignmentPath } = req.body;
+    
+    if (!req.file) {
+        return res.status(400).json({ error: '이미지 파일이 필요합니다.' });
+    }
+
+    try {
+        const imagePath = `/uploads/${req.file.filename}`;
+        const sql = 'INSERT INTO submissions (user_name, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
+        
+        await db.promise().query(sql, [userName, imagePath, description, assignmentName, assignmentPath]);
+        
+        res.status(201).json({ 
+            message: '과제가 성공적으로 제출되었습니다.',
+            imagePath: imagePath
+        });
+    } catch (err) {
+        console.error('과제 제출 중 오류:', err);
+        res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
+    }
+});
+
+app.get('/api/submissions', async (req, res) => {
+    try {
+        const [results] = await db.promise().query(`
+            SELECT s.*, NOT EXISTS (
+                SELECT 1 
+                FROM completed_assignments ca 
+                WHERE ca.user_name = s.user_name 
+                AND ca.assignment_name = s.assignment_name
+            ) as is_pending 
+            FROM submissions s 
+            ORDER BY s.submit_time DESC
+        `);
+        
+        res.json(results);
+    } catch (err) {
+        console.error('과제 목록 조회 중 오류:', err);
+        res.status(500).json({ error: '과제 목록 조회 중 오류가 발생했습니다.' });
+    }
+});
+
 app.get('/api/submissions/user/:userName', async (req, res) => {
     try {
         const { userName } = req.params;
@@ -197,209 +392,10 @@ app.get('/api/submissions/user/:userName', async (req, res) => {
     }
 });
 
-// 모듈 저장 API
-app.post('/api/save-module', async (req, res) => {
-    try {
-        const { iframeData, files } = req.body;
-
-        if (!iframeData || !files) {
-            return res.status(400).json({ error: '잘못된 데이터 형식입니다.' });
-        }
-
-        const folderName = iframeData.path.split('/').slice(-2)[0];
-        if (!validateFileName(folderName)) {
-            return res.status(400).json({
-                error: '폴더명은 영문자, 숫자, 하이픈, 언더스코어만 사용할 수 있습니다.'
-            });
-        }
-
-        // 파일 저장
-        const baseDir = path.join(__dirname, 'public');
-        const moduleDir = path.join(baseDir, path.dirname(iframeData.path));
-
-        await ensureDirectoryExists(moduleDir);
-
-        await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
-        await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
-        if (files.js) {
-            await fs.writeFile(path.join(moduleDir, 'index.js'), files.js, 'utf8');
-        }
-
-        // DB에 모듈 정보 저장
-        const [result] = await db.promise().query(
-            'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
-            [iframeData.level, iframeData.module, iframeData.name, iframeData.description, iframeData.path, iframeData.title]
-        );
-
-        res.status(200).json({
-            message: '모듈이 성공적으로 저장되었습니다.',
-            path: iframeData.path,
-            id: result.insertId
-        });
-    } catch (error) {
-        console.error('모듈 저장 중 오류:', error);
-        res.status(500).json({ error: '모듈 저장 중 오류가 발생했습니다.' });
-    }
-});
-
-// 모듈 삭제 API
-app.delete('/api/delete-module', async (req, res) => {
-    const { path: modulePath, name } = req.body;
-    
-    try {
-        const projectRoot = path.join(__dirname, '..');
-        const moduleDir = path.join(projectRoot, 'react-start', 'public', modulePath.replace(/^\//, ''));
-        const parentDir = path.dirname(moduleDir);
-        await fs.rm(parentDir, { recursive: true, force: true });
-
-        const iframeDataPath = path.join(projectRoot, 'react-start', 'src', 'data', 'iframeData.js');
-        let content = await fs.readFile(iframeDataPath, 'utf8');
-        
-        const regex = new RegExp(`\\{[^}]*name:\\s*"${name}"[^}]*\\}`, 'g');
-        content = content.replace(regex, '');
-        
-        content = content.replace(/,\s*,/g, ',');
-        content = content.replace(/\[\s*,/, '[');
-        content = content.replace(/,\s*\]/, ']');
-        content = content.replace(/\n\s*\n/g, '\n');
-        
-        await fs.writeFile(iframeDataPath, content, 'utf8');
-
-        res.status(200).json({ message: '삭제 완료' });
-    } catch (error) {
-        res.status(500).json({ error: '삭제 실패' });
-    }
-});
-
-// 사용자 조회 API
-app.get('/api/users', (req, res) => {
-    const sql = 'SELECT idx, id, name, role FROM user WHERE id != "admin"';
-    db.query(sql, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
-        }
-        res.json(results);
-    });
-});
-
-// 사용자 권한 변경 API
-app.put('/api/users/:idx/role', (req, res) => {
-    const userIdx = req.params.idx;
-    const { role } = req.body;
-    
-    if (!['user', 'manager'].includes(role)) {
-        return res.status(400).json({ error: '잘못된 권한 값입니다.' });
-    }
-
-    const sql = 'UPDATE user SET role = ? WHERE idx = ? AND id != "admin"';
-    db.query(sql, [role, userIdx], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: '권한 변경 중 오류가 발생했습니다.' });
-        }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
-        }
-        
-        res.json({ message: '권한이 성공적으로 변경되었습니다.' });
-    });
-});
-
-// 사용자 삭제 API
-app.delete('/api/users/:idx', (req, res) => {
-    const userIdx = req.params.idx;
-    
-    const sql = 'DELETE FROM user WHERE idx = ? AND id != "admin"';
-    db.query(sql, [userIdx], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
-        }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
-        }
-        
-        res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
-    });
-});
-
-const multer = require('multer');
-
-// 이미지 저장을 위한 multer 설정
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'public/uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('이미지 파일만 업로드 가능합니다.'));
-        }
-    }
-});
-
-// 과제 제출 API
-app.post('/api/submit', upload.single('image'), (req, res) => {
-    const { userName, description, assignmentName, assignmentPath } = req.body;
-    
-    if (!req.file) {
-        return res.status(400).json({ error: '이미지 파일이 필요합니다.' });
-    }
-
-    const imagePath = `/uploads/${req.file.filename}`;
-
-    // 과제 제출
-    const sql = 'INSERT INTO submissions (user_name, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
-    
-    db.query(sql, [userName, imagePath, description, assignmentName, assignmentPath], (err, result) => {
-        if (err) {
-            console.error('과제 제출 중 오류:', err);
-            return res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
-        }
-        
-        res.status(201).json({ 
-            message: '과제가 성공적으로 제출되었습니다.',
-            imagePath: imagePath
-        });
-    });
-});
-
-// 제출된 과제 목록 조회 API
-app.get('/api/submissions', (req, res) => {
-    const sql = `
-        SELECT s.*, NOT EXISTS (
-                    SELECT 1 
-                    FROM completed_assignments ca 
-                    WHERE ca.user_name = s.user_name 
-                    AND ca.assignment_name = s.assignment_name
-                ) as is_pending 
-        FROM submissions s 
-        ORDER BY s.submit_time DESC
-    `;
-    
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('과제 목록 조회 중 오류 발생:', err);
-            return res.status(500).json({ error: '과제 목록 조회 중 오류가 발생했습니다.' });
-        }
-        res.json(results);
-    });
-});
-
-// 과제 완료 처리 API
 app.post('/api/complete-assignment', async (req, res) => {
-    try {
-        const { userName, assignmentName } = req.body;
+    const { userName, assignmentName } = req.body;
 
+    try {
         await db.promise().beginTransaction();
 
         // 1. 제출된 과제의 이미지 경로 조회
@@ -418,7 +414,6 @@ app.post('/api/complete-assignment', async (req, res) => {
                 console.log('이미지 파일 삭제 완료:', fullImagePath);
             } catch (error) {
                 console.error('이미지 파일 삭제 실패:', error);
-                // 파일 삭제 실패는 트랜잭션을 롤백하지 않음 (DB 처리는 계속 진행)
             }
         }
 
@@ -449,377 +444,254 @@ app.post('/api/complete-assignment', async (req, res) => {
     }
 });
 
-// 완료된 과제 목록 조회 API
-app.get('/api/completed-assignments/:userName', (req, res) => {
-    const { userName } = req.params;
-    const sql = 'SELECT assignment_name, completed_at FROM completed_assignments WHERE user_name = ?';
-    
-    db.query(sql, [userName], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: '완료된 과제 조회 중 오류가 발생했습니다.' });
-        }
-        res.json(results);
-    });
-});
-
-// 특정 과제 삭제 API
-app.delete('/api/submissions/:idx', (req, res) => {
-    const submissionIdx = req.params.idx;
-    
-    const sql = 'DELETE FROM submissions WHERE idx = ?';
-    db.query(sql, [submissionIdx], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: '과제 삭제 중 오류가 발생했습니다.' });
-        }
-        
-        res.json({ message: '과제가 성공적으로 삭제되었습니다.' });
-    });
-});
-
-
-const TIERS = {
-    BRONZE: { name: '브론즈', minScore: 0, maxScore: 29 },
-    SILVER: { name: '실버', minScore: 30, maxScore: 59 },
-    GOLD: { name: '골드', minScore: 60, maxScore: 99 },
-    PLATINUM: { name: '플래티넘', minScore: 100, maxScore: 149 },
-    DIAMOND: { name: '다이아몬드', minScore: 150, maxScore: Infinity }
-};
-
-// 사용자의 티어 계산 함수
-function calculateTier(totalScore) {
-    for (const [tier, range] of Object.entries(TIERS)) {
-        if (totalScore >= range.minScore && totalScore <= range.maxScore) {
-            return {
-                tier: range.name, // 변경된 부분
-                nextTier: getNextTierInfo(totalScore)
-            };
-        }
-    }
-    return null;
-}
-
-// 다음 티어까지 남은 점수 계산
-function getNextTierInfo(currentScore) {
-const tiers = Object.entries(TIERS);
-for (let i = 0; i < tiers.length - 1; i++) {
-    const currentTier = tiers[i][1];
-    const nextTier = tiers[i + 1][1];
-    if (currentScore >= currentTier.minScore && currentScore < nextTier.minScore) {
-    return {
-        name: nextTier.name,
-        remainingScore: nextTier.minScore - currentScore
-    };
-    }
-}
-return null;
-}
-
-// 랭킹 정보 조회 API
-app.get('/api/rankings', async (req, res) => {
-try {
-    const [results] = await db.promise().query(`
-    SELECT 
-        u.name,
-        u.id,
-        COUNT(DISTINCT ca.assignment_name) as completed_assignments,
-        COALESCE(SUM(
-        CASE 
-            WHEN i.level = 0 THEN 1
-            WHEN i.level = 1 THEN 2
-            WHEN i.level = 2 THEN 4
-            WHEN i.level = 3 THEN 6
-            WHEN i.level = 4 THEN 10
-            WHEN i.level = 5 THEN 50
-        END
-        ), 0) as total_score
-    FROM user u
-    LEFT JOIN completed_assignments ca ON u.name = ca.user_name
-    LEFT JOIN iframe_data i ON ca.assignment_name = i.name
-    WHERE u.id != 'admin'
-    GROUP BY u.name, u.id
-    ORDER BY total_score DESC, completed_assignments DESC
-    `);
-    
-    const rankings = results.map((user, index) => ({
-    ...user,
-    rank: index + 1,
-    ...calculateTier(user.total_score)
-    }));
-
-    res.json(rankings);
-} catch (error) {
-    console.error('랭킹 조회 중 오류:', error);
-    res.status(500).json({ error: '랭킹 조회 중 오류가 발생했습니다.' });
-}
-});
-
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-fs.mkdir(uploadDir, { recursive: true }).catch(console.error);
-
-// iframe_data 삭제 API
-app.delete('/api/iframe-data/:idx', async (req, res) => {
+app.get('/api/completed-assignments/:userName', async (req, res) => {
     try {
-        const { idx } = req.params;
-        
-        const [result] = await db.promise().query(
-            'DELETE FROM iframe_data WHERE idx = ?',
-            [idx]
-        );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: '해당 데이터를 찾을 수 없습니다.' });
-        }
-
-        res.json({ message: '성공적으로 삭제되었습니다.' });
-    } catch (error) {
-        console.error('데이터 삭제 중 오류:', error);
-        res.status(500).json({ error: '데이터 삭제 중 오류가 발생했습니다.' });
-    }
-});
-
-// 아이디 중복 확인 API
-app.post('/api/check-id', (req, res) => {
-    const { id } = req.body;
-
-    // 아이디 유효성 검사
-    const idRegex = /^[a-zA-Z0-9]{4,20}$/;
-    if (!idRegex.test(id)) {
-        return res.status(400).json({ 
-            available: false,
-            message: '아이디는 4-20자의 영문자와 숫자만 사용 가능합니다.'
-        });
-    }
-
-    const sql = 'SELECT COUNT(*) as count FROM user WHERE id = ?';
-    db.query(sql, [id], (err, results) => {
-        if (err) {
-            return res.status(500).json({ 
-                error: '아이디 중복 확인 중 오류가 발생했습니다.' 
-            });
-        }
-
-        const isAvailable = results[0].count === 0;
-        res.json({ 
-            available: isAvailable,
-            message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.'
-        });
-    });
-});
-
-// GitHub API 설정
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_API = 'https://api.github.com';
-
-// GitHub 저장소 생성 및 코드 업로드 API
-app.post('/api/github/push', async (req, res) => {
-    const { userName, assignmentName } = req.body;
-
-    try {
-        // 사용자의 GitHub ID 조회
-        const [userResult] = await db.promise().query(
-            'SELECT github_id FROM user WHERE name = ?',
+        const { userName } = req.params;
+        const [results] = await db.promise().query(
+            'SELECT assignment_name, completed_at, github_url FROM completed_assignments WHERE user_name = ?',
             [userName]
         );
-
-        if (!userResult.length || !userResult[0].github_id) {
-            return res.status(400).json({ 
-                error: 'GitHub ID를 찾을 수 없습니다. 회원정보에서 GitHub ID를 확인해주세요.' 
-            });
-        }
-
-        const githubId = userResult[0].github_id;
-
-        try {
-            // GitHub 사용자 정보 확인
-            await axios.get(`${GITHUB_API}/users/${githubId}`, {
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-
-            // W-LMS 저장소 존재 여부 확인
-            try {
-                await axios.get(`${GITHUB_API}/repos/${githubId}/W-LMS`, {
-                    headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
-            } catch (error) {
-                if (error.response?.status === 404) {
-                    // 저장소가 없으면 생성
-                    await axios.post(`${GITHUB_API}/user/repos`, {
-                        name: 'W-LMS',
-                        private: false,
-                        auto_init: true
-                    }, {
-                        headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                } else {
-                    throw error;
-                }
-            }
-
-            // 과제 정보 확인
-            const [submissionResult] = await db.promise().query(
-                'SELECT * FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
-                [userName, assignmentName]
-            );
-
-            if (!submissionResult.length) {
-                return res.status(404).json({ error: '완료된 과제를 찾을 수 없습니다.' });
-            }
-
-            // GitHub URL 생성 및 저장
-            const githubUrl = `https://github.com/${githubId}/W-LMS/tree/main/${assignmentName}`;
-            
-            // DB에 GitHub URL 업데이트
-            await db.promise().query(
-                'UPDATE completed_assignments SET github_url = ? WHERE user_name = ? AND assignment_name = ?',
-                [githubUrl, userName, assignmentName]
-            );
-
-            res.json({ 
-                message: '성공적으로 GitHub 저장소가 생성되었습니다.',
-                githubUrl 
-            });
-
-        } catch (error) {
-            if (error.response?.status === 404) {
-                return res.status(400).json({ error: '유효하지 않은 GitHub ID입니다.' });
-            }
-            throw error;
-        }
-
+        res.json(results);
     } catch (error) {
-        console.error('GitHub 처리 중 오류:', error);
-        res.status(500).json({ 
-            error: 'GitHub 처리 중 오류가 발생했습니다.',
-            details: error.response?.data?.message || error.message 
-        });
+        console.error('완료된 과제 조회 중 오류:', error);
+        res.status(500).json({ error: '완료된 과제 조회 중 오류가 발생했습니다.' });
     }
 });
 
-const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN
-});
-
-app.post('/api/project-url', async (req, res) => {
-    const { userName, assignmentName, projectUrl, code } = req.body;
-
-    try {
-        // GitHub 저장소 정보 파싱
-        const repoUrl = new URL(projectUrl);
-        const [, owner, repo] = repoUrl.pathname.split('/');
-        const repoName = repo.replace('.git', '');
-
-        try {
-            // Base64로 파일 내용 인코딩
-            const files = [
-                {
-                    path: `${assignmentName}/index.html`,
-                    content: code.html
-                },
-                {
-                    path: `${assignmentName}/style.css`,
-                    content: code.css
-                }
-            ];
-
-            if (code.js) {
-                files.push({
-                    path: `${assignmentName}/index.js`,
-                    content: code.js
-                });
-            }
-
-            // 각 파일을 GitHub에 업로드
-            for (const file of files) {
-                await octokit.repos.createOrUpdateFileContents({
-                    owner,
-                    repo: repoName,
-                    path: file.path,
-                    message: `Add ${file.path}`,
-                    content: Buffer.from(file.content).toString('base64'),
-                    branch: 'main'
-                });
-            }
-
-            // DB에 URL 저장
-            await db.promise().query(
-                'UPDATE completed_assignments SET github_url = ? WHERE user_name = ? AND assignment_name = ?',
-                [projectUrl, userName, assignmentName]
-            );
-
-            res.json({
-                message: '코드가 성공적으로 GitHub에 업로드되었습니다.',
-                githubUrl: `${projectUrl}/tree/main/${assignmentName}`
-            });
-        } catch (error) {
-            console.error('GitHub 업로드 오류:', error);
-            res.status(500).json({
-                error: 'GitHub 업로드 중 오류가 발생했습니다.',
-                details: error.message
-            });
-        }
-    } catch (error) {
-        console.error('URL 처리 오류:', error);
-        res.status(400).json({ error: '잘못된 GitHub URL 형식입니다.' });
-    }
-});
-
-// 파일 접근 권한 확인을 위한 테스트 엔드포인트 추가
-app.get('/api/test-directory', async (req, res) => {
-    try {
-        const testDir = path.join(__dirname, 'public', 'projects');
-        const stats = await fs.stat(testDir);
-        res.json({
-            exists: true,
-            isDirectory: stats.isDirectory(),
-            permissions: stats.mode,
-            writeable: await isWriteable(testDir)
-        });
-    } catch (error) {
-        res.json({
-            exists: false,
-            error: error.message
-        });
-    }
-});
-
-// 디렉토리 쓰기 권한 확인 함수
-async function isWriteable(path) {
-    try {
-        await fs.access(path, fs.constants.W_OK);
-        return true;
-    } catch {
-        return false;
-    }
-}
-// URL 조회 API 추가
-app.get('/api/project-url/:userName/:assignmentName', async (req, res) => {
-    const { userName, assignmentName } = req.params;
-
+// 사용자 관리 API
+app.get('/api/users', async (req, res) => {
     try {
         const [results] = await db.promise().query(
-            'SELECT github_url as projectUrl FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
-            [userName, assignmentName]
+            'SELECT idx, id, name, role, github_id FROM user WHERE id != "admin"'
         );
-
-        if (results.length === 0) {
-            return res.status(404).json({ error: '등록된 URL을 찾을 수 없습니다.' });
-        }
-
-        res.json({ projectUrl: results[0].projectUrl });
-    } catch (error) {
-        res.status(500).json({ error: 'URL 조회 중 오류가 발생했습니다.' });
+        res.json(results);
+    } catch (err) {
+        console.error('사용자 조회 중 오류:', err);
+        res.status(500).json({ error: '사용자 조회 중 오류가 발생했습니다.' });
     }
 });
 
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
+app.put('/api/users/:idx/role', async (req, res) => {
+    const userIdx = req.params.idx;
+    const { role } = req.body;
+    
+    if (!['user', 'manager'].includes(role)) {
+        return res.status(400).json({ error: '잘못된 권한 값입니다.' });
+    }
+
+    try {
+        const [result] = await db.promise().query(
+            'UPDATE user SET role = ? WHERE idx = ? AND id != "admin"',
+            [role, userIdx]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+        }
+        
+        res.json({ message: '권한이 성공적으로 변경되었습니다.' });
+    } catch (err) {
+        console.error('권한 변경 중 오류:', err);
+        res.status(500).json({ error: '권한 변경 중 오류가 발생했습니다.' });
+    }
 });
+
+app.delete('/api/users/:idx', async (req, res) => {
+    const userIdx = req.params.idx;
+    
+    try {
+        const [result] = await db.promise().query(
+            'DELETE FROM user WHERE idx = ? AND id != "admin"',
+            [userIdx]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+        }
+        
+        res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
+    } catch (err) {
+        console.error('사용자 삭제 중 오류:', err);
+        res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
+    }
+});
+// 모듈 관리 API
+app.get('/api/modules', async (req, res) => {
+    try {
+        const { level, module, search } = req.query;
+        let sql = 'SELECT * FROM iframe_data';
+        const params = [];
+        const conditions = [];
+
+        if (level !== undefined && level !== '') {
+            conditions.push('level = ?');
+            params.push(parseInt(level));
+        }
+
+        if (module && module !== '') {
+            conditions.push('module = ?');
+            params.push(module);
+        }
+
+        if (search && search.trim() !== '') {
+            conditions.push('(name LIKE ? OR description LIKE ?)');
+            const searchTerm = `%${search.trim()}%`;
+            params.push(searchTerm, searchTerm);
+        }
+
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        sql += ' ORDER BY module, level, name';
+
+        const [results] = await db.promise().query(sql, params);
+        res.json(results);
+    } catch (error) {
+        console.error('모듈 목록 조회 중 오류:', error);
+        res.status(500).json({ error: '모듈 목록 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+app.post('/api/save-module', async (req, res) => {
+    try {
+        const { iframeData, files } = req.body;
+
+        if (!iframeData || !files) {
+            return res.status(400).json({ error: '잘못된 데이터 형식입니다.' });
+        }
+
+        const folderName = iframeData.path.split('/').slice(-2)[0];
+        if (!validateFileName(folderName)) {
+            return res.status(400).json({
+                error: '폴더명은 영문자, 숫자, 하이픈, 언더스코어만 사용할 수 있습니다.'
+            });
+        }
+
+        const baseDir = path.join(__dirname, 'public');
+        const moduleDir = path.join(baseDir, path.dirname(iframeData.path));
+
+        await ensureDirectoryExists(moduleDir);
+
+        // 파일 저장
+        await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
+        await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
+        if (files.js) {
+            await fs.writeFile(path.join(moduleDir, 'index.js'), files.js, 'utf8');
+        }
+
+        const [result] = await db.promise().query(
+            'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
+            [iframeData.level, iframeData.module, iframeData.name, iframeData.description, iframeData.path, iframeData.title]
+        );
+
+        res.status(200).json({
+            message: '모듈이 성공적으로 저장되었습니다.',
+            path: iframeData.path,
+            id: result.insertId
+        });
+    } catch (error) {
+        console.error('모듈 저장 중 오류:', error);
+        res.status(500).json({ error: '모듈 저장 중 오류가 발생했습니다.' });
+    }
+});
+
+// 랭킹 시스템 API
+app.get('/api/rankings', async (req, res) => {
+    try {
+        const [results] = await db.promise().query(`
+            SELECT 
+                u.name,
+                u.id,
+                COUNT(DISTINCT ca.assignment_name) as completed_assignments,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN i.level = 0 THEN 1
+                        WHEN i.level = 1 THEN 2
+                        WHEN i.level = 2 THEN 4
+                        WHEN i.level = 3 THEN 6
+                        WHEN i.level = 4 THEN 10
+                        WHEN i.level = 5 THEN 50
+                    END
+                ), 0) as total_score
+            FROM user u
+            LEFT JOIN completed_assignments ca ON u.name = ca.user_name
+            LEFT JOIN iframe_data i ON ca.assignment_name = i.name
+            WHERE u.id != 'admin'
+            GROUP BY u.name, u.id
+            ORDER BY total_score DESC, completed_assignments DESC
+        `);
+        
+        const rankings = results.map((user, index) => ({
+            ...user,
+            rank: index + 1,
+            ...calculateTier(user.total_score)
+        }));
+
+        res.json(rankings);
+    } catch (error) {
+        console.error('랭킹 조회 중 오류:', error);
+        res.status(500).json({ error: '랭킹 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 파일 시스템 초기화
+async function initializeFileSystem() {
+    try {
+        const uploadDir = path.join(__dirname, 'public', 'uploads');
+        await ensureDirectoryExists(uploadDir);
+        console.log('업로드 디렉토리 초기화 완료');
+        
+        const projectsDir = path.join(__dirname, 'public', 'projects');
+        await ensureDirectoryExists(projectsDir);
+        console.log('프로젝트 디렉토리 초기화 완료');
+    } catch (error) {
+        console.error('파일 시스템 초기화 중 오류:', error);
+        process.exit(1);
+    }
+}
+
+// 서버 시작
+async function startServer() {
+    try {
+        await initializeFileSystem();
+        
+        db.connect((err) => {
+            if (err) {
+                console.error('데이터베이스 연결 실패:', err);
+                process.exit(1);
+            }
+            console.log('데이터베이스 연결 성공');
+            
+            app.listen(port, () => {
+                console.log(`서버가 http://localhost:${port} 에서 실행 중입니다.`);
+            });
+        });
+    } catch (error) {
+        console.error('서버 시작 중 오류:', error);
+        process.exit(1);
+    }
+}
+
+// 기본 라우트
+app.get('/', (req, res) => {
+    res.json({ 
+        message: 'W-LMS API 서버가 정상적으로 실행 중입니다.',
+        version: '1.0.0',
+        startTime: new Date().toISOString()
+    });
+});
+
+// 에러 핸들링 미들웨어
+app.use((err, req, res, next) => {
+    console.error('서버 오류:', err);
+    res.status(500).json({ 
+        error: '서버 오류가 발생했습니다.',
+        message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
+});
+
+// 서버 시작
+startServer();
+
+export default app;
