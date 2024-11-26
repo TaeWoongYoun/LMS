@@ -94,7 +94,8 @@ const TIERS = {
     SILVER: { name: '실버', minScore: 30, maxScore: 59 },
     GOLD: { name: '골드', minScore: 60, maxScore: 99 },
     PLATINUM: { name: '플래티넘', minScore: 100, maxScore: 149 },
-    DIAMOND: { name: '다이아몬드', minScore: 150, maxScore: Infinity }
+    DIAMOND: { name: '다이아몬드', minScore: 150, maxScore: 199 },
+    SERAPHIM: { name: '세라핌', minScore: 200, maxScore: Infinity },
 };
 
 function calculateTier(totalScore) {

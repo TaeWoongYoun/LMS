@@ -6,6 +6,7 @@ import silverImg from '../assets/silver.png';
 import goldImg from '../assets/gold.png';
 import platinumImg from '../assets/platinum.png';
 import diamondImg from '../assets/diamond.png';
+import seraphim from '../assets/seraphim.png'
 
 function RankPage() {
     const [rankings, setRankings] = useState([]);
@@ -18,7 +19,8 @@ function RankPage() {
         실버: silverImg,
         골드: goldImg,
         플래티넘: platinumImg,
-        다이아몬드: diamondImg
+        다이아몬드: diamondImg,
+        세라핌: seraphim
     };
 
     useEffect(() => {
