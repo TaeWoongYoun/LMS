@@ -538,3 +538,31 @@ address{
 .submit-modal input[type="file"]::file-selector-button:hover {
   background-color: #5a6268;
 }
+
+.code-textarea {
+  width: 100%;
+  height: 200px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 5px;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.modal-content.submit-modal {
+  width: 80%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}

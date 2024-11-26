@@ -7,9 +7,11 @@ function JoinPage() {
     const [name, setName] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [githubId, setGithubId] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [idChecked, setIdChecked] = useState(false);
+    const [githubChecked, setGithubChecked] = useState(false);
 
     // 아이디 유효성 검사
     const validateId = (id) => {
@@ -21,6 +23,26 @@ function JoinPage() {
     const validatePassword = (password) => {
         const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
         return passwordRegex.test(password);
+    };
+
+    // GitHub 계정 확인
+    const checkGithubAccount = async () => {
+        if (!githubId) {
+            setError('GitHub ID를 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await axios.get(`https://api.github.com/users/${githubId}`);
+            if (response.status === 200) {
+                setSuccess('유효한 GitHub 계정입니다.');
+                setError('');
+                setGithubChecked(true);
+            }
+        } catch (err) {
+            setError('유효하지 않은 GitHub 계정입니다.');
+            setGithubChecked(false);
+        }
     };
 
     // 아이디 중복 확인
@@ -59,12 +81,24 @@ function JoinPage() {
         setSuccess('');
     };
 
+    // GitHub ID 변경 시 확인 상태 초기화
+    const handleGithubIdChange = (e) => {
+        setGithubId(e.target.value);
+        setGithubChecked(false);
+        setError('');
+        setSuccess('');
+    };
+
     const handleJoin = async (e) => {
         e.preventDefault();
 
-        // 기본 유효성 검사
         if (!idChecked) {
             setError('아이디 중복 확인을 해주세요.');
+            return;
+        }
+
+        if (!githubChecked) {
+            setError('GitHub 계정 확인을 해주세요.');
             return;
         }
 
@@ -84,8 +118,12 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://localhost:3001/api/register', { id, pw: password, name });
-            console.log(response);
+            const response = await axios.post('http://localhost:3001/api/register', { 
+                id, 
+                pw: password, 
+                name,
+                githubId 
+            });
             setSuccess('회원가입이 완료되었습니다!');
             setError('');
         } catch (err) {
@@ -100,8 +138,27 @@ function JoinPage() {
                 <div>
                     <label>ID: </label>
                     <div className='id-box'>
-                        <input type="text" className='input-id' value={id} onChange={handleIdChange}required />
-                        <button type="button" onClick={checkIdDuplicate}className="check-button">중복확인</button>
+                        <input type="text" className='input-id' value={id} onChange={handleIdChange} required />
+                        <button type="button" onClick={checkIdDuplicate} className="check-button">중복확인</button>
+                    </div>
+                </div>
+                <div>
+                    <label>GitHub ID: </label>
+                    <div className='id-box'>
+                        <input 
+                            type="text" 
+                            className='input-id' 
+                            value={githubId} 
+                            onChange={handleGithubIdChange}
+                            required 
+                        />
+                        <button 
+                            type="button" 
+                            onClick={checkGithubAccount} 
+                            className="check-button"
+                        >
+                            계정확인
+                        </button>
                     </div>
                 </div>
                 <div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Prism from 'prismjs';
 
 function MainPage() {
@@ -15,9 +16,17 @@ function MainPage() {
     const [submittedAssignments, setSubmittedAssignments] = useState([]);
     const [moduleData, setModuleData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
+    // URL 등록 관련 상태 추가
+    const [projectUrl, setProjectUrl] = useState('');
+    const [showUrlModal, setShowUrlModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [htmlContent, setHtmlContent] = useState('');
+    const [cssContent, setCssContent] = useState('');
+    const [jsContent, setJsContent] = useState('');
     // 필터 상태
     const [filters, setFilters] = useState({
         level: '',
@@ -153,6 +162,7 @@ function MainPage() {
             window.removeEventListener('loginChange', handleLoginChange);
         };
     }, [fetchModuleData]);
+
     // 필터 변경 핸들러
     const handleFilterChange = (type, value) => {
         setFilters(prev => ({
@@ -217,6 +227,49 @@ function MainPage() {
         } catch (error) {
             setSubmitError(error.message || '과제 제출 중 오류가 발생했습니다.');
         }
+    };
+
+    // URL 등록 처리
+    const handleProjectSubmit = async (e) => {
+        e.preventDefault();
+        if (!projectUrl) {
+            alert('프로젝트 URL을 입력해주세요.');
+            return;
+        }
+    
+        try {
+            await axios.post('http://localhost:3001/api/project-url', {
+                userName,
+                assignmentName: selectedAssignment,
+                projectUrl,
+                code: {
+                    html: htmlContent,
+                    css: cssContent,
+                    js: jsContent
+                }
+            });
+    
+            alert('프로젝트 URL과 코드가 성공적으로 등록되었습니다!');
+            setShowUrlModal(false);
+            setProjectUrl('');
+            setSelectedAssignment(null);
+            setHtmlContent('');
+            setCssContent('');
+            setJsContent('');
+        } catch (error) {
+            console.error('등록 오류:', error);
+            if (error.response?.status === 401) {
+                alert('로그인이 필요합니다. 다시 로그인해주세요.');
+                navigate('/login');
+            } else {
+                alert('등록 중 오류가 발생했습니다.');
+            }
+        }
+    };
+
+    const handleUrlClick = (assignmentName) => {
+        setSelectedAssignment(assignmentName);
+        setShowUrlModal(true);
     };
 
     const handlePreview = async (data, e) => {
@@ -383,10 +436,15 @@ function MainPage() {
                                                     className="preview-btn"
                                                     onClick={(e) => handlePreview(item, e)}
                                                 >
-                                                    미리보기
-                                                </button>
-                                                {!completedAssignments.includes(item.name) && 
-                                                    !submittedAssignments.includes(item.name) && (
+                                                    미리보기</button>
+                                                {completedAssignments.includes(item.name) ? (
+                                                    <button 
+                                                        className="project-url-btn"
+                                                        onClick={() => handleUrlClick(item.name)}
+                                                    >
+                                                        프로젝트 등록
+                                                    </button>
+                                                ) : !submittedAssignments.includes(item.name) && (
                                                     <button 
                                                         className="submit-btn"
                                                         onClick={(e) => handleSubmitClick(item, e)}
@@ -497,6 +555,84 @@ function MainPage() {
                                                 onClick={resetSubmissionForm}
                                             >
                                                 닫기
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        {showUrlModal && (
+                            <div className="modal-area">
+                                <div className="modal-content submit-modal">
+                                    <h2>프로젝트 URL 및 코드 등록</h2>
+                                    <form onSubmit={handleProjectSubmit}>
+                                        <div className="form-group">
+                                            <label>과제명:</label>
+                                            <input
+                                                type="text"
+                                                value={selectedAssignment}
+                                                disabled
+                                                className="disabled-input"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>프로젝트 URL:</label>
+                                            <input
+                                                type="url"
+                                                value={projectUrl}
+                                                onChange={(e) => setProjectUrl(e.target.value)}
+                                                placeholder="https://github.com/yourusername/project"
+                                                required
+                                                className="url-input"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>HTML 코드:</label>
+                                            <textarea
+                                                value={htmlContent}
+                                                onChange={(e) => setHtmlContent(e.target.value)}
+                                                placeholder="HTML 코드를 입력하세요"
+                                                className="code-textarea"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>CSS 코드:</label>
+                                            <textarea
+                                                value={cssContent}
+                                                onChange={(e) => setCssContent(e.target.value)}
+                                                placeholder="CSS 코드를 입력하세요"
+                                                className="code-textarea"
+                                                required
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>JavaScript 코드:</label>
+                                            <textarea
+                                                value={jsContent}
+                                                onChange={(e) => setJsContent(e.target.value)}
+                                                placeholder="JavaScript 코드를 입력하세요"
+                                                className="code-textarea"
+                                            />
+                                        </div>
+                                        <div className="button-group">
+                                            <button type="submit" className="submit-button">
+                                                등록하기
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                className="cancel-button"
+                                                onClick={() => {
+                                                    setShowUrlModal(false);
+                                                    setProjectUrl('');
+                                                    setSelectedAssignment(null);
+                                                    setHtmlContent('');
+                                                    setCssContent('');
+                                                    setJsContent('');
+                                                }}
+                                            >
+                                                취소
                                             </button>
                                         </div>
                                     </form>
