@@ -1,19 +1,31 @@
-const express = require('express');
-const mysql = require('mysql2');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const fs = require('fs').promises;
-const path = require('path');
-const app = express();
-const port = 3001;
+import express from 'express';
+import mysql from 'mysql2';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import cors from 'cors';
+import multer from 'multer';
+import { Octokit } from '@octokit/rest';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
+import * as fs from 'fs/promises';
+import bodyParser from 'body-parser';
+import axios from 'axios';
 
-const db = mysql.createConnection({ host: 'localhost', user: 'root', password: '', database: 'LMS' });
+// ES Module에서 __dirname 설정
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config();
+
+// GitHub API 설정
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_API = 'https://api.github.com';
 
 db.connect((err) => {
     if (err) {
-        console.error('데이터베이스 연결 실패', err);
+        console.error('데이터베이스 연결 실패:', err);
         return;
     }
     console.log('데이터베이스 연결 성공');
@@ -87,48 +99,42 @@ app.post('/api/register', (req, res) => {
 });
 
 // 로그인 API
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { id, pw } = req.body;
 
-    const sql = 'SELECT * FROM user WHERE id = ?';
-    db.query(sql, [id], (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
-        }
+    try {
+        const [results] = await db.promise().query(
+            'SELECT * FROM user WHERE id = ?',
+            [id]
+        );
 
         if (results.length === 0) {
             return res.status(401).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
         }
 
         const user = results[0];
+        const isMatch = await bcrypt.compare(pw, user.pw);
 
-        bcrypt.compare(pw, user.pw, (err, isMatch) => {
-            if (err) {
-                return res.status(500).json({ error: '로그인 중 오류가 발생했습니다.' });
-            }
+        if (!isMatch) {
+            return res.status(401).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
+        }
 
-            if (!isMatch) {
-                return res.status(401).json({ error: '아이디 또는 비밀번호가 잘못되었습니다.' });
-            }
+        const token = jwt.sign(
+            { id: user.id, name: user.name, role: user.role },
+            'your_jwt_secret',
+            { expiresIn: '24h' }
+        );
 
-            const token = jwt.sign(
-                { 
-                    id: user.id, 
-                    name: user.name,
-                    role: user.role
-                }, 
-                'your_jwt_secret', 
-                { expiresIn: '1h' }
-            );
-
-            res.status(200).json({ 
-                message: '로그인 성공', 
-                token,
-                name: user.name,
-                role: user.role
-            });
+        res.json({ 
+            message: '로그인 성공',
+            token,
+            name: user.name,
+            role: user.role
         });
-    });
+    } catch (error) {
+        console.error('로그인 오류:', error);
+        res.status(500).json({ error: '로그인 처리 중 오류가 발생했습니다.' });
+    }
 });
 
 app.get('/api/modules', async (req, res) => {
@@ -321,19 +327,17 @@ const multer = require('multer');
 
 // 이미지 저장을 위한 multer 설정
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/uploads/')
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads/');
     },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname)
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB 제한
-    },
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -600,6 +604,220 @@ app.post('/api/check-id', (req, res) => {
             message: isAvailable ? '사용 가능한 아이디입니다.' : '이미 사용 중인 아이디입니다.'
         });
     });
+});
+
+// GitHub API 설정
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_API = 'https://api.github.com';
+
+// GitHub 저장소 생성 및 코드 업로드 API
+app.post('/api/github/push', async (req, res) => {
+    const { userName, assignmentName } = req.body;
+
+    try {
+        // 사용자의 GitHub ID 조회
+        const [userResult] = await db.promise().query(
+            'SELECT github_id FROM user WHERE name = ?',
+            [userName]
+        );
+
+        if (!userResult.length || !userResult[0].github_id) {
+            return res.status(400).json({ 
+                error: 'GitHub ID를 찾을 수 없습니다. 회원정보에서 GitHub ID를 확인해주세요.' 
+            });
+        }
+
+        const githubId = userResult[0].github_id;
+
+        try {
+            // GitHub 사용자 정보 확인
+            await axios.get(`${GITHUB_API}/users/${githubId}`, {
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+
+            // W-LMS 저장소 존재 여부 확인
+            try {
+                await axios.get(`${GITHUB_API}/repos/${githubId}/W-LMS`, {
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+            } catch (error) {
+                if (error.response?.status === 404) {
+                    // 저장소가 없으면 생성
+                    await axios.post(`${GITHUB_API}/user/repos`, {
+                        name: 'W-LMS',
+                        private: false,
+                        auto_init: true
+                    }, {
+                        headers: {
+                            'Authorization': `token ${GITHUB_TOKEN}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                } else {
+                    throw error;
+                }
+            }
+
+            // 과제 정보 확인
+            const [submissionResult] = await db.promise().query(
+                'SELECT * FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
+                [userName, assignmentName]
+            );
+
+            if (!submissionResult.length) {
+                return res.status(404).json({ error: '완료된 과제를 찾을 수 없습니다.' });
+            }
+
+            // GitHub URL 생성 및 저장
+            const githubUrl = `https://github.com/${githubId}/W-LMS/tree/main/${assignmentName}`;
+            
+            // DB에 GitHub URL 업데이트
+            await db.promise().query(
+                'UPDATE completed_assignments SET github_url = ? WHERE user_name = ? AND assignment_name = ?',
+                [githubUrl, userName, assignmentName]
+            );
+
+            res.json({ 
+                message: '성공적으로 GitHub 저장소가 생성되었습니다.',
+                githubUrl 
+            });
+
+        } catch (error) {
+            if (error.response?.status === 404) {
+                return res.status(400).json({ error: '유효하지 않은 GitHub ID입니다.' });
+            }
+            throw error;
+        }
+
+    } catch (error) {
+        console.error('GitHub 처리 중 오류:', error);
+        res.status(500).json({ 
+            error: 'GitHub 처리 중 오류가 발생했습니다.',
+            details: error.response?.data?.message || error.message 
+        });
+    }
+});
+
+const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
+});
+
+app.post('/api/project-url', async (req, res) => {
+    const { userName, assignmentName, projectUrl, code } = req.body;
+
+    try {
+        // GitHub 저장소 정보 파싱
+        const repoUrl = new URL(projectUrl);
+        const [, owner, repo] = repoUrl.pathname.split('/');
+        const repoName = repo.replace('.git', '');
+
+        try {
+            // Base64로 파일 내용 인코딩
+            const files = [
+                {
+                    path: `${assignmentName}/index.html`,
+                    content: code.html
+                },
+                {
+                    path: `${assignmentName}/style.css`,
+                    content: code.css
+                }
+            ];
+
+            if (code.js) {
+                files.push({
+                    path: `${assignmentName}/index.js`,
+                    content: code.js
+                });
+            }
+
+            // 각 파일을 GitHub에 업로드
+            for (const file of files) {
+                await octokit.repos.createOrUpdateFileContents({
+                    owner,
+                    repo: repoName,
+                    path: file.path,
+                    message: `Add ${file.path}`,
+                    content: Buffer.from(file.content).toString('base64'),
+                    branch: 'main'
+                });
+            }
+
+            // DB에 URL 저장
+            await db.promise().query(
+                'UPDATE completed_assignments SET github_url = ? WHERE user_name = ? AND assignment_name = ?',
+                [projectUrl, userName, assignmentName]
+            );
+
+            res.json({
+                message: '코드가 성공적으로 GitHub에 업로드되었습니다.',
+                githubUrl: `${projectUrl}/tree/main/${assignmentName}`
+            });
+        } catch (error) {
+            console.error('GitHub 업로드 오류:', error);
+            res.status(500).json({
+                error: 'GitHub 업로드 중 오류가 발생했습니다.',
+                details: error.message
+            });
+        }
+    } catch (error) {
+        console.error('URL 처리 오류:', error);
+        res.status(400).json({ error: '잘못된 GitHub URL 형식입니다.' });
+    }
+});
+
+// 파일 접근 권한 확인을 위한 테스트 엔드포인트 추가
+app.get('/api/test-directory', async (req, res) => {
+    try {
+        const testDir = path.join(__dirname, 'public', 'projects');
+        const stats = await fs.stat(testDir);
+        res.json({
+            exists: true,
+            isDirectory: stats.isDirectory(),
+            permissions: stats.mode,
+            writeable: await isWriteable(testDir)
+        });
+    } catch (error) {
+        res.json({
+            exists: false,
+            error: error.message
+        });
+    }
+});
+
+// 디렉토리 쓰기 권한 확인 함수
+async function isWriteable(path) {
+    try {
+        await fs.access(path, fs.constants.W_OK);
+        return true;
+    } catch {
+        return false;
+    }
+}
+// URL 조회 API 추가
+app.get('/api/project-url/:userName/:assignmentName', async (req, res) => {
+    const { userName, assignmentName } = req.params;
+
+    try {
+        const [results] = await db.promise().query(
+            'SELECT github_url as projectUrl FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
+            [userName, assignmentName]
+        );
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: '등록된 URL을 찾을 수 없습니다.' });
+        }
+
+        res.json({ projectUrl: results[0].projectUrl });
+    } catch (error) {
+        res.status(500).json({ error: 'URL 조회 중 오류가 발생했습니다.' });
+    }
 });
 
 app.get('/', (req, res) => {
