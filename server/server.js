@@ -692,6 +692,27 @@ app.use((err, req, res, next) => {
     });
 });
 
+app.get('/api/check-github/:githubId', async (req, res) => {
+    const { githubId } = req.params;
+
+    try {
+        const response = await octokit.users.getByUsername({
+            username: githubId
+        });
+        
+        if (response.status === 200) {
+            res.json({ valid: true });
+        }
+    } catch (error) {
+        if (error.status === 404) {
+            res.status(404).json({ error: '존재하지 않는 GitHub 계정입니다.' });
+        } else {
+            console.error('GitHub API 에러:', error);
+            res.status(500).json({ error: 'GitHub 계정 확인 중 오류가 발생했습니다.' });
+        }
+    }
+});
+
 // 서버 시작
 startServer();
 

@@ -31,16 +31,17 @@ function JoinPage() {
             setError('GitHub ID를 입력해주세요.');
             return;
         }
-
+    
         try {
-            const response = await axios.get(`https://api.github.com/users/${githubId}`);
-            if (response.status === 200) {
+            const response = await axios.get(`http://localhost:3001/api/check-github/${githubId}`);
+            if (response.data.valid) {
                 setSuccess('유효한 GitHub 계정입니다.');
                 setError('');
                 setGithubChecked(true);
             }
         } catch (err) {
-            setError('유효하지 않은 GitHub 계정입니다.');
+            console.error('GitHub 계정 확인 에러:', err);
+            setError(err.response?.data?.error || '유효하지 않은 GitHub 계정입니다.');
             setGithubChecked(false);
         }
     };
