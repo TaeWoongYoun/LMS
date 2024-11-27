@@ -569,20 +569,18 @@ app.post('/api/save-module', async (req, res) => {
             });
         }
 
-        // public 폴더를 기준으로 경로 설정
-        const moduleDir = path.join('public', path.dirname(iframeData.path));
+        // 프로젝트 루트의 public 폴더 경로 설정
+        const moduleDir = path.join('..', 'public', path.dirname(iframeData.path));
 
-        // 디렉토리 생성
         await ensureDirectoryExists(moduleDir);
 
-        // 파일 저장 (상대 경로 사용)
+        // 파일 저장
         await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
         await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
         if (files.js) {
             await fs.writeFile(path.join(moduleDir, 'index.js'), files.js, 'utf8');
         }
 
-        // DB에 저장
         const [result] = await db.promise().query(
             'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
             [iframeData.level, iframeData.module, iframeData.name, iframeData.description, iframeData.path, iframeData.title]
@@ -721,23 +719,23 @@ app.delete('/api/iframe-data/:idx', async (req, res) => {
 
     try {
         // 1. 먼저 삭제할 모듈의 정보를 가져옵니다
-        const [module] = await db.promise().query(
+        const [modules] = await db.promise().query(
             'SELECT path FROM iframe_data WHERE idx = ?',
             [idx]
         );
 
-        if (module.length === 0) {
+        if (modules.length === 0) {
             return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
         }
 
         // 2. 파일 시스템에서 관련 파일들을 삭제합니다
-        const modulePath = path.dirname(path.join('public', module[0].path));
+        const modulePath = path.join('..', 'public', path.dirname(modules[0].path));
         try {
-            await fs.rm(modulePath, { recursive: true });
+            await fs.rm(modulePath, { recursive: true, force: true });
             console.log('모듈 디렉토리 삭제 완료:', modulePath);
         } catch (error) {
             console.error('파일 삭제 실패:', error);
-            // 파일 삭제 실패해도 DB에서는 삭제 진행
+            return res.status(500).json({ error: '파일 삭제 중 오류가 발생했습니다.' });
         }
 
         // 3. 데이터베이스에서 모듈 정보를 삭제합니다
