@@ -57,7 +57,7 @@ function Header() {
     return (
         <header>
             <div className='logo'>
-                <h1><Link to="/">DBSWEB</Link></h1>
+                <h1><Link to="/">W-LMS</Link></h1>
             </div>
             <nav>
                 <ul>
