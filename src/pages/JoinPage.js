@@ -19,9 +19,9 @@ function JoinPage() {
         return idRegex.test(id);
     };
 
-    // 비밀번호 유효성 검사
+    // 비밀번호 유효성 검사 - 4자리 숫자만
     const validatePassword = (password) => {
-        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        const passwordRegex = /^\d{4,}$/;
         return passwordRegex.test(password);
     };
 
@@ -104,7 +104,7 @@ function JoinPage() {
         }
 
         if (!validatePassword(password)) {
-            setError('비밀번호는 8자 이상이며, 영문자, 숫자, 특수문자를 포함해야 합니다.');
+            setError('비밀번호는 4자리 이상의 숫자만 입력 가능합니다.');
             return;
         }
 
@@ -139,7 +139,7 @@ function JoinPage() {
                 <div>
                     <label>ID: </label>
                     <div className='id-box'>
-                        <input type="text" className='input-id' value={id} onChange={handleIdChange} required />
+                        <input type="text" className='input-id' placeholder='아이디' value={id} onChange={handleIdChange} required />
                         <button type="button" onClick={checkIdDuplicate} className="check-button">중복확인</button>
                     </div>
                 </div>
@@ -148,7 +148,8 @@ function JoinPage() {
                     <div className='id-box'>
                         <input 
                             type="text" 
-                            className='input-id' 
+                            className='input-id'
+                            placeholder='깃허브 아이디' 
                             value={githubId} 
                             onChange={handleGithubIdChange}
                             required 
@@ -164,15 +165,27 @@ function JoinPage() {
                 </div>
                 <div>
                     <label>Name: </label>
-                    <input type="text" className='input-name' value={name} onChange={(e) => setName(e.target.value)} required />
+                    <input type="text" className='input-name' placeholder='이름' value={name} onChange={(e) => setName(e.target.value)} required />
                 </div>
                 <div>
                     <label>Password: </label>
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                    <input 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        placeholder="4자리 이상 숫자"
+                        required 
+                    />
                 </div>
                 <div>
                     <label>Confirm Password: </label>
-                    <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                    <input 
+                        type="password" 
+                        value={confirmPassword} 
+                        onChange={(e) => setConfirmPassword(e.target.value)} 
+                        placeholder="비밀번호 확인"
+                        required 
+                    />
                 </div>
                 <button type="submit" className='submit-btn'>Sign Up</button>
             </form>
