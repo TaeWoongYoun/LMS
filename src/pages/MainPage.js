@@ -12,6 +12,7 @@ function MainPage() {
     const [jsCode, setJsCode] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [userName, setUserName] = useState('');
+    const [userId, setUserId] = useState('');
     const [completedAssignments, setCompletedAssignments] = useState([]);
     const [submittedAssignments, setSubmittedAssignments] = useState([]);
     const [moduleData, setModuleData] = useState([]);
@@ -20,13 +21,14 @@ function MainPage() {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // URL 등록 관련 상태 추가
+    // URL 등록 관련 상태
     const [projectUrl, setProjectUrl] = useState('');
     const [showUrlModal, setShowUrlModal] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState(null);
     const [htmlContent, setHtmlContent] = useState('');
     const [cssContent, setCssContent] = useState('');
     const [jsContent, setJsContent] = useState('');
+
     // 필터 상태
     const [filters, setFilters] = useState({
         level: '',
@@ -81,9 +83,9 @@ function MainPage() {
         }
     }, [filters]);
 
-    const fetchCompletedAssignments = async (userName) => {
+    const fetchCompletedAssignments = async (userId) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/completed-assignments/${userName}`);
+            const response = await fetch(`http://localhost:3001/api/completed-assignments/${userId}`);
             const data = await response.json();
             setCompletedAssignments(data.map(item => item.assignment_name));
         } catch (error) {
@@ -91,10 +93,9 @@ function MainPage() {
         }
     };
 
-    const fetchSubmittedAssignments = async (userName) => {
+    const fetchSubmittedAssignments = async (userId) => {
         try {
-            const encodedUserName = encodeURIComponent(userName);
-            const response = await fetch(`http://localhost:3001/api/submissions/user/${encodedUserName}`);
+            const response = await fetch(`http://localhost:3001/api/submissions/user/${userId}`);
             if (!response.ok) throw new Error('제출된 과제 조회 실패');
             
             const data = await response.json();
@@ -110,15 +111,17 @@ function MainPage() {
             try {
                 setLoading(true);
                 const storedName = localStorage.getItem('userName');
+                const storedId = localStorage.getItem('userId');
                 setUserName(storedName || '');
-
-                if (storedName) {
+                setUserId(storedId || '');
+    
+                if (storedId) {  // storedName 대신 storedId 체크
                     await Promise.all([
-                        fetchCompletedAssignments(storedName),
-                        fetchSubmittedAssignments(storedName)
+                        fetchCompletedAssignments(storedId),
+                        fetchSubmittedAssignments(storedId)
                     ]);
                 }
-
+    
                 await fetchModuleData();
                 setLoading(false);
             } catch (err) {
@@ -126,7 +129,7 @@ function MainPage() {
                 setLoading(false);
             }
         };
-
+    
         fetchInitialData();
     }, [fetchModuleData]);
 
@@ -146,12 +149,14 @@ function MainPage() {
     useEffect(() => {
         const handleLoginChange = async () => {
             const storedName = localStorage.getItem('userName');
+            const storedId = localStorage.getItem('userId');
             setUserName(storedName || '');
+            setUserId(storedId || '');
     
-            if (storedName) {
+            if (storedId) {
                 await Promise.all([
-                    fetchCompletedAssignments(storedName),
-                    fetchSubmittedAssignments(storedName)
+                    fetchCompletedAssignments(storedId),
+                    fetchSubmittedAssignments(storedId)
                 ]);
                 await fetchModuleData();
             }
@@ -193,30 +198,44 @@ function MainPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // userId 확인
+        const currentUserId = localStorage.getItem('userId');
+        console.log('Current userId from localStorage:', currentUserId);
+        
+        if (!currentUserId) {
+            setSubmitError('로그인이 필요합니다.');
+            return;
+        }
+    
         if (!selectedImage) {
             setSubmitError('이미지를 선택해주세요.');
             return;
         }
-
+    
         const formData = new FormData();
         formData.append('image', selectedImage);
-        formData.append('userName', userName);
+        formData.append('userId', currentUserId);
         formData.append('description', description);
         formData.append('assignmentName', submissionData.name);
         formData.append('assignmentPath', submissionData.path);
-
+    
+        // FormData 내용 확인
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+    
         try {
             const response = await fetch('http://localhost:3001/api/submit', {
                 method: 'POST',
                 body: formData,
             });
-
-            const data = await response.json();
-
+    
             if (!response.ok) {
-                throw new Error(data.error);
+                const errorData = await response.json();
+                throw new Error(errorData.error || '과제 제출 중 오류가 발생했습니다.');
             }
-
+    
+            const data = await response.json();
             setSuccess('과제가 성공적으로 제출되었습니다!');
             setSubmittedAssignments([...submittedAssignments, submissionData.name]);
             
@@ -225,7 +244,7 @@ function MainPage() {
             }, 2000);
             
         } catch (error) {
-            setSubmitError(error.message || '과제 제출 중 오류가 발생했습니다.');
+            setSubmitError(error.message);
         }
     };
 
@@ -239,7 +258,7 @@ function MainPage() {
     
         try {
             await axios.post('http://localhost:3001/api/project-url', {
-                userName,
+                userId,  // userName 대신 userId 사용
                 assignmentName: selectedAssignment,
                 projectUrl,
                 code: {
@@ -357,6 +376,17 @@ function MainPage() {
         setSelected(null);
     };
 
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     if (loading) {
         return <div className="loading">Loading...</div>;
     }
@@ -436,7 +466,8 @@ function MainPage() {
                                                     className="preview-btn"
                                                     onClick={(e) => handlePreview(item, e)}
                                                 >
-                                                    미리보기</button>
+                                                    미리보기
+                                                </button>
                                                 {completedAssignments.includes(item.name) ? (
                                                     <button 
                                                         className="project-url-btn"
@@ -562,6 +593,7 @@ function MainPage() {
                             </div>
                         )}
 
+                        {/* URL 등록 모달 */}
                         {showUrlModal && (
                             <div className="modal-area">
                                 <div className="modal-content submit-modal">
