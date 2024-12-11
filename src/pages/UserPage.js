@@ -7,14 +7,19 @@ const UserPage = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [userRole, setUserRole] = useState('');
+    const [currentUserId, setCurrentUserId] = useState(''); // 현재 로그인한 사용자의 ID 추가
 
     useEffect(() => {
         const storedRole = localStorage.getItem('userRole');
+        const storedUserId = localStorage.getItem('userId'); // 현재 사용자 ID 가져오기
         setUserRole(storedRole || '');
+        setCurrentUserId(storedUserId || '');
         
         const handleLoginChange = () => {
             const storedRole = localStorage.getItem('userRole');
+            const storedUserId = localStorage.getItem('userId');
             setUserRole(storedRole || '');
+            setCurrentUserId(storedUserId || '');
         };
         
         window.addEventListener('loginChange', handleLoginChange);
@@ -41,7 +46,13 @@ const UserPage = () => {
         }
     };
 
-    const handleRoleChange = async (idx, newRole) => {
+    const handleRoleChange = async (idx, newRole, userId) => {
+        // 자기 자신의 권한은 변경할 수 없음
+        if (userId === currentUserId) {
+            alert('자신의 권한은 변경할 수 없습니다.');
+            return;
+        }
+
         try {
             const response = await fetch(`http://localhost:3001/api/users/${idx}/role`, {
                 method: 'PUT',
@@ -66,7 +77,13 @@ const UserPage = () => {
         }
     };
 
-    const handleDelete = async (idx) => {
+    const handleDelete = async (idx, userId) => {
+        // 자기 자신은 삭제할 수 없음
+        if (userId === currentUserId) {
+            alert('자신의 계정은 삭제할 수 없습니다.');
+            return;
+        }
+
         if (!window.confirm('정말 이 사용자를 삭제하시겠습니까?')) {
             return;
         }
@@ -120,15 +137,22 @@ const UserPage = () => {
                                         <select 
                                             key={`role-${user.idx}`} 
                                             value={user.role || 'user'} 
-                                            onChange={e => handleRoleChange(user.idx, e.target.value)} 
-                                            className="role-select"
+                                            onChange={e => handleRoleChange(user.idx, e.target.value, user.id)} 
+                                            className={`role-select ${user.id === currentUserId ? 'disabled' : ''}`}
+                                            disabled={user.id === currentUserId}
                                         >
                                             <option value="user">일반회원</option>
                                             <option value="manager">담당자</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <button onClick={() => handleDelete(user.idx)} className="delete-button">회원 퇴출</button>
+                                        <button 
+                                            onClick={() => handleDelete(user.idx, user.id)} 
+                                            className="delete-button"
+                                            disabled={user.id === currentUserId}
+                                        >
+                                            회원 퇴출
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
