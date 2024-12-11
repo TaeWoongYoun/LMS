@@ -37,14 +37,14 @@ const CheckPage = () => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        userName: submission.user_name,
+                        userId: submission.user_id,  // name 대신 id 사용
                         assignmentName: submission.assignment_name
                     }),
                 });
 
                 if (response.ok) {
                     setSubmissions(submissions.filter(s => 
-                        !(s.user_name === submission.user_name && 
+                        !(s.user_id === submission.user_id && 
                         s.assignment_name === submission.assignment_name)
                     ));
                     alert('과제가 확인 처리되었습니다.');
@@ -96,44 +96,36 @@ const CheckPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {submissions.map((submission) => (
-                                <tr key={submission.idx}>
-                                    <td>{submission.user_name}</td>
-                                    <td>{submission.assignment_name}</td>
-                                    <td>{formatDate(submission.submit_time)}</td>
-                                    <td>{submission.description}</td>
-                                    <td>
-                                        <button 
-                                            className="preview-btn"
-                                            onClick={() => {
-                                                setSelectedAssignment(submission.assignment_path);
-                                                setShowPreviewModal(true);
-                                            }}
-                                        >
-                                            과제 보기
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button 
-                                            className="view-image-btn"
-                                            onClick={() => {
-                                                setSelectedImage(submission.image_path);
-                                                setShowImageModal(true);
-                                            }}
-                                        >
-                                            제출물 보기
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button 
-                                            className="check-btn"
-                                            onClick={() => handleCheck(submission)}
-                                        >
-                                            과제 확인
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {submissions.map((submission) => (<tr key={submission.idx}>
+                                <td>{submission.user_name}</td>
+                                <td>{submission.assignment_name}</td>
+                                <td>{formatDate(submission.submit_time)}</td>
+                                <td>{submission.description}</td>
+                                <td>
+                                    <button 
+                                        className="preview-btn"
+                                        onClick={() => {
+                                            setSelectedAssignment(submission.assignment_path);
+                                            setShowPreviewModal(true);
+                                        }}
+                                    >과제 보기</button>
+                                </td>
+                                <td>
+                                    <button 
+                                        className="view-image-btn"
+                                        onClick={() => {
+                                            setSelectedImage(submission.image_path);
+                                            setShowImageModal(true);
+                                        }}
+                                    >제출물 보기</button>
+                                </td>
+                                <td>
+                                    <button 
+                                        className="check-btn"
+                                        onClick={() => handleCheck(submission)}
+                                    >과제 확인</button>
+                                </td>
+                            </tr>))}
                         </tbody>
                     </table>
                 </div>
