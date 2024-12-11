@@ -28,7 +28,8 @@ function LoginPage() {
             if (response.data && response.data.token) {
                 setSuccess('로그인 성공');
                 localStorage.setItem('token', response.data.token);
-                localStorage.setItem('userName', response.data.name);
+                localStorage.setItem('userId', response.data.id);  // id 저장
+                localStorage.setItem('userName', response.data.name);  // 화면 표시용으로 name도 유지
                 localStorage.setItem('userRole', response.data.role);
                 
                 // axios 기본 헤더 설정
