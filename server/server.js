@@ -169,6 +169,7 @@ app.post('/api/login', async (req, res) => {
         res.json({ 
             message: '로그인 성공',
             token,
+            id: user.id,
             name: user.name,
             role: user.role,
             githubId: user.github_id
@@ -209,7 +210,7 @@ app.post('/api/check-id', async (req, res) => {
 
 // GitHub 관련 API
 app.post('/api/project-url', async (req, res) => {
-    const { userName, assignmentName, projectUrl, code } = req.body;
+    const { userId, assignmentName, projectUrl, code } = req.body;
 
     try {
         // GitHub 저장소 정보 파싱
@@ -296,7 +297,7 @@ app.post('/api/project-url', async (req, res) => {
             await db.promise().query(
                 'INSERT INTO completed_assignments (user_name, assignment_name, github_url) VALUES (?, ?, ?) ' +
                 'ON DUPLICATE KEY UPDATE github_url = VALUES(github_url)',
-                [userName, assignmentName, projectUrl]
+                [userId, assignmentName, projectUrl]
             );
 
             res.json({
@@ -316,13 +317,13 @@ app.post('/api/project-url', async (req, res) => {
     }
 });
 
-app.get('/api/project-url/:userName/:assignmentName', async (req, res) => {
-    const { userName, assignmentName } = req.params;
+app.get('/api/project-url/:userId/:assignmentName', async (req, res) => {
+    const { userId, assignmentName } = req.params;
 
     try {
         const [results] = await db.promise().query(
             'SELECT github_url as projectUrl FROM completed_assignments WHERE user_name = ? AND assignment_name = ?',
-            [userName, assignmentName]
+            [userId, assignmentName]
         );
 
         if (results.length === 0) {
@@ -337,17 +338,44 @@ app.get('/api/project-url/:userName/:assignmentName', async (req, res) => {
 });
 // 과제 관련 API
 app.post('/api/submit', upload.single('image'), async (req, res) => {
-    const { userName, description, assignmentName, assignmentPath } = req.body;
+    console.log('Received submit request with body:', req.body);
+    const { userId, description, assignmentName, assignmentPath } = req.body;
     
+    if (!userId) {
+        return res.status(400).json({ error: '사용자 ID가 필요합니다.' });
+    }
+
     if (!req.file) {
         return res.status(400).json({ error: '이미지 파일이 필요합니다.' });
     }
 
     try {
+        // 사용자 존재 여부 확인
+        const [users] = await db.promise().query(
+            'SELECT id FROM user WHERE id = ?',
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(400).json({ error: '존재하지 않는 사용자입니다.' });
+        }
+
+        // submissions 테이블에 이미 동일한 과제가 제출되었는지 확인
+        const [existingSubmissions] = await db.promise().query(
+            'SELECT idx FROM submissions WHERE user_id = ? AND assignment_name = ?',
+            [userId, assignmentName]
+        );
+
+        if (existingSubmissions.length > 0) {
+            return res.status(400).json({ error: '이미 제출된 과제입니다.' });
+        }
+
         const imagePath = `/uploads/${req.file.filename}`;
-        const sql = 'INSERT INTO submissions (user_name, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
         
-        await db.promise().query(sql, [userName, imagePath, description, assignmentName, assignmentPath]);
+        const sql = 'INSERT INTO submissions (user_id, image_path, description, assignment_name, assignment_path) VALUES (?, ?, ?, ?, ?)';
+        const params = [userId, imagePath, description, assignmentName, assignmentPath];
+        
+        await db.promise().query(sql, params);
         
         res.status(201).json({ 
             message: '과제가 성공적으로 제출되었습니다.',
@@ -355,20 +383,23 @@ app.post('/api/submit', upload.single('image'), async (req, res) => {
         });
     } catch (err) {
         console.error('과제 제출 중 오류:', err);
-        res.status(500).json({ error: '과제 제출 중 오류가 발생했습니다.' });
+        res.status(500).json({ 
+            error: '과제 제출 중 오류가 발생했습니다.',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
-
 app.get('/api/submissions', async (req, res) => {
     try {
         const [results] = await db.promise().query(`
-            SELECT s.*, NOT EXISTS (
+            SELECT s.*, u.name as user_name, NOT EXISTS (
                 SELECT 1 
                 FROM completed_assignments ca 
-                WHERE ca.user_name = s.user_name 
+                WHERE ca.user_id = s.user_id 
                 AND ca.assignment_name = s.assignment_name
             ) as is_pending 
             FROM submissions s 
+            JOIN user u ON s.user_id = u.id
             ORDER BY s.submit_time DESC
         `);
         
@@ -379,12 +410,12 @@ app.get('/api/submissions', async (req, res) => {
     }
 });
 
-app.get('/api/submissions/user/:userName', async (req, res) => {
+app.get('/api/submissions/user/:userId', async (req, res) => {
     try {
-        const { userName } = req.params;
+        const { userId } = req.params;
         const [results] = await db.promise().query(
-            'SELECT * FROM submissions WHERE user_name = ?',
-            [userName]
+            'SELECT * FROM submissions WHERE user_id = ?',
+            [userId]
         );
         res.json(results);
     } catch (error) {
@@ -394,15 +425,28 @@ app.get('/api/submissions/user/:userName', async (req, res) => {
 });
 
 app.post('/api/complete-assignment', async (req, res) => {
-    const { userName, assignmentName } = req.body;
+    const { userId, assignmentName } = req.body;
 
     try {
         await db.promise().beginTransaction();
 
+        // 먼저 user의 이름을 가져옵니다
+        const [userResults] = await db.promise().query(
+            'SELECT name FROM user WHERE id = ?',
+            [userId]
+        );
+
+        if (userResults.length === 0) {
+            await db.promise().rollback();
+            return res.status(400).json({ error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const userName = userResults[0].name;
+
         // 1. 제출된 과제의 이미지 경로 조회
         const [submissions] = await db.promise().query(
-            'SELECT image_path FROM submissions WHERE user_name = ? AND assignment_name = ?',
-            [userName, assignmentName]
+            'SELECT image_path FROM submissions WHERE user_id = ? AND assignment_name = ?',
+            [userId, assignmentName]
         );
 
         if (submissions.length > 0) {
@@ -420,14 +464,14 @@ app.post('/api/complete-assignment', async (req, res) => {
 
         // 3. 완료된 과제 테이블에 추가
         await db.promise().query(
-            'INSERT INTO completed_assignments (user_name, assignment_name) VALUES (?, ?)',
-            [userName, assignmentName]
+            'INSERT INTO completed_assignments (user_id, user_name, assignment_name) VALUES (?, ?, ?)',
+            [userId, userName, assignmentName]
         );
 
         // 4. 제출 테이블에서 과제 삭제
         await db.promise().query(
-            'DELETE FROM submissions WHERE user_name = ? AND assignment_name = ?',
-            [userName, assignmentName]
+            'DELETE FROM submissions WHERE user_id = ? AND assignment_name = ?',
+            [userId, assignmentName]
         );
 
         await db.promise().commit();
@@ -445,12 +489,12 @@ app.post('/api/complete-assignment', async (req, res) => {
     }
 });
 
-app.get('/api/completed-assignments/:userName', async (req, res) => {
+app.get('/api/completed-assignments/:userId', async (req, res) => {
     try {
-        const { userName } = req.params;
+        const { userId } = req.params;
         const [results] = await db.promise().query(
-            'SELECT assignment_name, completed_at, github_url FROM completed_assignments WHERE user_name = ?',
-            [userName]
+            'SELECT assignment_name, completed_at, github_url FROM completed_assignments WHERE user_id = ?',
+            [userId]
         );
         res.json(results);
     } catch (error) {
@@ -616,7 +660,7 @@ app.get('/api/rankings', async (req, res) => {
                     END
                 ), 0) as total_score
             FROM user u
-            LEFT JOIN completed_assignments ca ON u.name = ca.user_name
+            LEFT JOIN completed_assignments ca ON u.id = ca.user_id
             LEFT JOIN iframe_data i ON ca.assignment_name = i.name
             WHERE u.id != 'admin'
             GROUP BY u.name, u.id
