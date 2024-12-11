@@ -28,8 +28,10 @@ function RankPage() {
             try {
                 const rankingsResponse = await axios.get('http://localhost:3001/api/rankings');
                 setRankings(rankingsResponse.data);
-                const userName = localStorage.getItem('userName');
-                const userInfo = rankingsResponse.data.find(user => user.name === userName);
+                
+                // userId로 현재 사용자 찾기
+                const userId = localStorage.getItem('userId');
+                const userInfo = rankingsResponse.data.find(user => user.id === userId);
                 setCurrentUser(userInfo);
                 setLoading(false);
             } catch (error) {
@@ -99,7 +101,10 @@ function RankPage() {
                         </thead>
                         <tbody>
                             {rankings.map((user) => (
-                                <tr key={user.id} className={`tier-${user.tier?.toLowerCase()}`}>
+                                <tr 
+                                    key={user.id} 
+                                    className={`tier-${user.tier?.toLowerCase()} ${user.id === localStorage.getItem('userId') ? 'current-user' : ''}`}
+                                >
                                     <td>{user.rank}</td>
                                     <td>{user.name}</td>
                                     <td>{user.tier}</td>
