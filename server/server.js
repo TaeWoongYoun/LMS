@@ -552,21 +552,76 @@ app.delete('/api/users/:idx', async (req, res) => {
     const userIdx = req.params.idx;
     
     try {
+        // 트랜잭션 시작
+        await db.promise().beginTransaction();
+
+        // 사용자 정보 조회
+        const [userResults] = await db.promise().query(
+            'SELECT id FROM user WHERE idx = ? AND id != "admin"',
+            [userIdx]
+        );
+
+        if (userResults.length === 0) {
+            await db.promise().rollback();
+            return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
+        }
+
+        const userId = userResults[0].id;
+
+        // 1. submissions 테이블에서 사용자의 이미지 파일 경로 조회
+        const [submissions] = await db.promise().query(
+            'SELECT image_path FROM submissions WHERE user_id = ?',
+            [userId]
+        );
+
+        // 2. 이미지 파일 삭제
+        for (const submission of submissions) {
+            if (submission.image_path) {
+                const fullImagePath = path.join(__dirname, 'public', submission.image_path);
+                try {
+                    await fs.unlink(fullImagePath);
+                    console.log('이미지 파일 삭제 완료:', fullImagePath);
+                } catch (error) {
+                    console.error('이미지 파일 삭제 실패:', error);
+                }
+            }
+        }
+
+        // 3. completed_assignments 테이블에서 사용자 데이터 삭제
+        await db.promise().query(
+            'DELETE FROM completed_assignments WHERE user_id = ?',
+            [userId]
+        );
+
+        // 4. submissions 테이블에서 사용자 데이터 삭제
+        await db.promise().query(
+            'DELETE FROM submissions WHERE user_id = ?',
+            [userId]
+        );
+
+        // 5. 마지막으로 user 테이블에서 사용자 삭제
         const [result] = await db.promise().query(
             'DELETE FROM user WHERE idx = ? AND id != "admin"',
             [userIdx]
         );
         
         if (result.affectedRows === 0) {
+            await db.promise().rollback();
             return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
         }
+
+        // 트랜잭션 커밋
+        await db.promise().commit();
         
         res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
     } catch (err) {
+        // 에러 발생 시 롤백
+        await db.promise().rollback();
         console.error('사용자 삭제 중 오류:', err);
         res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
     }
 });
+
 // 모듈 관리 API
 app.get('/api/modules', async (req, res) => {
     try {
