@@ -126,13 +126,13 @@ function getNextTierInfo(currentScore) {
 }
 // 인증 관련 API
 app.post('/api/register', async (req, res) => {
-    const { id, pw, name, githubId } = req.body;
+    const { id, pw, name, githubId, githubToken } = req.body;
 
     try {
         const hashedPassword = await bcrypt.hash(pw, 10);
-        const sql = 'INSERT INTO user (id, pw, name, github_id) VALUES (?, ?, ?, ?)';
+        const sql = 'INSERT INTO user (id, pw, name, github_id, github_token) VALUES (?, ?, ?, ?, ?)';
         
-        await db.promise().query(sql, [id, hashedPassword, name, githubId]);
+        await db.promise().query(sql, [id, hashedPassword, name, githubId, githubToken]);
         res.status(201).json({ message: '회원가입 성공' });
     } catch (err) {
         console.error('회원가입 오류:', err);
@@ -738,8 +738,17 @@ app.use((err, req, res, next) => {
 
 app.get('/api/check-github/:githubId', async (req, res) => {
     const { githubId } = req.params;
+    const githubToken = req.headers.authorization?.split(' ')[1];
+
+    if (!githubToken) {
+        return res.status(400).json({ error: 'GitHub 토큰이 필요합니다.' });
+    }
 
     try {
+        const octokit = new Octokit({
+            auth: githubToken
+        });
+
         const response = await octokit.users.getByUsername({
             username: githubId
         });

@@ -23,11 +23,11 @@
     max-width: 500px;
 }
 
-.main-area form h1{
+.main-area form h1 {
     padding-bottom: 15px;
 }
 
-.main-area form div {
+.main-area form > div {
     margin-bottom: 25px;
 }
 
@@ -40,7 +40,7 @@
     color: #333;
 }
 
-.main-area .id-box{
+.main-area .id-box {
     display: flex;
     width: 100%;
     height: 40px;
@@ -48,7 +48,7 @@
     justify-content: space-between;
 }
 
-.main-area .id-box button{
+.main-area .id-box button {
     margin-top: 7px;
     width: 25%;
     padding: 12px;
@@ -60,7 +60,16 @@
     font-size: 18px;
 }
 
-.main-area .input-id{
+.main-area .input-token,
+.main-area .input-name {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.main-area .input-id {
     width: 70%;
     padding: 14px;
     font-size: 18px;
@@ -69,18 +78,26 @@
     margin-top: 8px;
 }
 
-.main-area .input-name,
+.main-area .inline-inputs {
+    display: flex;
+    gap: 20px;
+}
+
+.main-area .inline-inputs .input-group {
+    flex: 1;
+}
+
 .main-area input[type="password"] {
     width: 100%;
     padding: 14px;
     font-size: 18px;
     border: 1px solid #ccc;
     border-radius: 8px;
-    margin-top: 8px;
 }
 
 .main-area .input-name:focus,
 .main-area .input-id:focus,
+.main-area .input-token:focus,
 .main-area input[type="password"]:focus {
     border-color: #007bff;
     outline: none;
@@ -111,12 +128,5 @@
 .main-area p {
     text-align: center;
     font-size: 18px;
-}
-
-.main-area p.red {
-    color: red;
-}
-
-.main-area p.green {
-    color: green;
+    margin-top: 15px;
 }

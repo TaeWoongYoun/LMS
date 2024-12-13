@@ -8,6 +8,7 @@ function JoinPage() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [githubId, setGithubId] = useState('');
+    const [githubToken, setGithubToken] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [idChecked, setIdChecked] = useState(false);
@@ -27,13 +28,17 @@ function JoinPage() {
 
     // GitHub 계정 확인
     const checkGithubAccount = async () => {
-        if (!githubId) {
-            setError('GitHub ID를 입력해주세요.');
+        if (!githubId || !githubToken) {
+            setError('GitHub ID와 토큰을 모두 입력해주세요.');
             return;
         }
     
         try {
-            const response = await axios.get(`http://localhost:3001/api/check-github/${githubId}`);
+            const response = await axios.get(`http://localhost:3001/api/check-github/${githubId}`, {
+                headers: {
+                    'Authorization': `token ${githubToken}`
+                }
+            });
             if (response.data.valid) {
                 setSuccess('유효한 GitHub 계정입니다.');
                 setError('');
@@ -90,6 +95,14 @@ function JoinPage() {
         setSuccess('');
     };
 
+    // GitHub Token 변경 시 확인 상태 초기화
+    const handleGithubTokenChange = (e) => {
+        setGithubToken(e.target.value);
+        setGithubChecked(false);
+        setError('');
+        setSuccess('');
+    };
+
     const handleJoin = async (e) => {
         e.preventDefault();
 
@@ -118,15 +131,23 @@ function JoinPage() {
             return;
         }
 
+        if (!githubToken) {
+            setError('GitHub 토큰을 입력해주세요.');
+            return;
+        }
+
         try {
             const response = await axios.post('http://localhost:3001/api/register', { 
                 id, 
                 pw: password, 
                 name,
-                githubId 
+                githubId,
+                githubToken
             });
             setSuccess('회원가입이 완료되었습니다!');
             setError('');
+            // 회원가입 성공 후 로그인 페이지로 이동
+            window.location.href = '/login';
         } catch (err) {
             setError('회원가입에 실패했습니다.');
         }
@@ -139,8 +160,21 @@ function JoinPage() {
                 <div>
                     <label>ID: </label>
                     <div className='id-box'>
-                        <input type="text" className='input-id' placeholder='아이디' value={id} onChange={handleIdChange} required />
-                        <button type="button" onClick={checkIdDuplicate} className="check-button">중복확인</button>
+                        <input 
+                            type="text" 
+                            className='input-id' 
+                            placeholder='아이디' 
+                            value={id} 
+                            onChange={handleIdChange} 
+                            required 
+                        />
+                        <button 
+                            type="button" 
+                            onClick={checkIdDuplicate} 
+                            className="check-button"
+                        >
+                            중복확인
+                        </button>
                     </div>
                 </div>
                 <div>
@@ -164,33 +198,57 @@ function JoinPage() {
                     </div>
                 </div>
                 <div>
-                    <label>Name: </label>
-                    <input type="text" className='input-name' placeholder='이름' value={name} onChange={(e) => setName(e.target.value)} required />
+                    <div className='input-group'>
+                        <label>GitHub Token: </label>
+                        <input 
+                            type="text" 
+                            className='input-token'
+                            placeholder='깃허브 토큰' 
+                            value={githubToken}
+                            onChange={handleGithubTokenChange}
+                            required 
+                        />
+                    </div>
+                    <div className='input-group'>
+                        <label>Name: </label>
+                        <input 
+                            type="text" 
+                            className='input-name' 
+                            placeholder='이름' 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)} 
+                            required 
+                        />
+                    </div>
                 </div>
-                <div>
-                    <label>Password: </label>
-                    <input 
-                        type="password" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        placeholder="4자리 이상 숫자"
-                        required 
-                    />
-                </div>
-                <div>
-                    <label>Confirm Password: </label>
-                    <input 
-                        type="password" 
-                        value={confirmPassword} 
-                        onChange={(e) => setConfirmPassword(e.target.value)} 
-                        placeholder="비밀번호 확인"
-                        required 
-                    />
+                <div className='inline-inputs'>
+                    <div className='input-group'>
+                        <label>Password: </label>
+                        <input 
+                            type="password" 
+                            className='input-password'
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            placeholder="4자리 이상 숫자"
+                            required 
+                        />
+                    </div>
+                    <div className='input-group'>
+                        <label>Confirm Password: </label>
+                        <input 
+                            type="password" 
+                            className='input-password'
+                            value={confirmPassword} 
+                            onChange={(e) => setConfirmPassword(e.target.value)} 
+                            placeholder="비밀번호 확인"
+                            required 
+                        />
+                    </div>
                 </div>
                 <button type="submit" className='submit-btn'>Sign Up</button>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {success && <p style={{ color: 'green' }}>{success}</p>}
             </form>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            {success && <p style={{ color: 'green' }}>{success}</p>}
         </div>
     );
 }
