@@ -209,6 +209,8 @@ function JoinPage() {
                             required 
                         />
                     </div>
+                </div>
+                <div>
                     <div className='input-group'>
                         <label>Name: </label>
                         <input 
