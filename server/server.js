@@ -208,7 +208,6 @@ app.post('/api/check-id', async (req, res) => {
     }
 });
 
-// GitHub 관련 API
 app.post('/api/project-url', async (req, res) => {
     const { userId, assignmentName, projectUrl, code } = req.body;
 
@@ -218,8 +217,24 @@ app.post('/api/project-url', async (req, res) => {
         const [, owner, repo] = repoUrl.pathname.split('/');
         const repoName = repo.replace('.git', '');
 
+        // 사용자의 GitHub 토큰 가져오기
+        const [userResults] = await db.promise().query(
+            'SELECT github_token FROM user WHERE id = ?',
+            [userId]
+        );
+
+        if (userResults.length === 0 || !userResults[0].github_token) {
+            return res.status(400).json({ error: 'GitHub 토큰을 찾을 수 없습니다.' });
+        }
+
+        const userGithubToken = userResults[0].github_token;
+
+        // 사용자의 토큰으로 Octokit 인스턴스 생성
+        const octokit = new Octokit({
+            auth: userGithubToken
+        });
+
         try {
-            // Base64로 파일 내용 인코딩하고 GitHub에 업로드
             const files = [
                 {
                     path: `${assignmentName}/index.html`,
@@ -246,28 +261,22 @@ app.post('/api/project-url', async (req, res) => {
                 try {
                     const content = Buffer.from(file.content).toString('base64');
                     
-                    // 파일이 이미 존재하는지 확인
                     try {
-                        await octokit.repos.getContent({
+                        // 파일이 이미 존재하는지 확인
+                        const { data: existingFile } = await octokit.repos.getContent({
                             owner,
                             repo: repoName,
                             path: file.path
                         });
 
                         // 파일이 존재하면 업데이트
-                        const existingFile = await octokit.repos.getContent({
-                            owner,
-                            repo: repoName,
-                            path: file.path
-                        });
-
                         await octokit.repos.createOrUpdateFileContents({
                             owner,
                             repo: repoName,
                             path: file.path,
                             message: `Update ${file.path}`,
                             content: content,
-                            sha: existingFile.data.sha,
+                            sha: existingFile.sha,
                             branch: 'main'
                         });
                     } catch (error) {
@@ -285,8 +294,6 @@ app.post('/api/project-url', async (req, res) => {
                             throw error;
                         }
                     }
-                    
-                    console.log(`Successfully uploaded ${file.path}`);
                 } catch (error) {
                     console.error(`Error uploading ${file.path}:`, error);
                     throw error;
