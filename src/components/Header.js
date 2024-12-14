@@ -41,7 +41,6 @@ function Header() {
     
         window.addEventListener('loginChange', handleLoginChange);
         
-        // 메뉴가 열려있을 때 스크롤 방지
         if (isMenuOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -78,25 +77,23 @@ function Header() {
                         <li><Link to="/">Home</Link></li>
                         {loginStatus === null ? (
                             <>
-                                <li><Link to="/welcome">Welcome</Link></li>
                                 <li><Link to="/login">Login</Link></li>
                                 <li><Link to="/join">Join</Link></li>
                             </>
                         ) : (
                             <>
                                 <li><Link to="/welcome">Welcome</Link></li>
-                                <li><Link to="/rank">Rank</Link></li>
-                                <li><Link to="/update">Update</Link></li>
                                 <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                             </>
                         )}
                     </ul>
                 </nav>
-                {(loginStatus === 'admin' || loginStatus === 'manager') && (
+                {loginStatus && (
                     <div className="hamburger-menu">
                         <button 
                             className={`menu-toggle ${isMenuOpen ? 'active' : ''}`} 
                             onClick={toggleMenu}
+                            aria-label="메뉴 열기"
                         >
                             <span></span>
                             <span></span>
@@ -106,30 +103,35 @@ function Header() {
                 )}
             </div>
 
-            {/* 사이드 메뉴 */}
-            {(loginStatus === 'admin' || loginStatus === 'manager') && (
+            {loginStatus && (
                 <div className={`side-menu ${isMenuOpen ? 'open' : ''}`}>
                     <button 
                         className="side-menu-close"
                         onClick={() => setIsMenuOpen(false)}
+                        aria-label="메뉴 닫기"
                     >
                         ✕
                     </button>
                     <nav className="admin-nav">
-                        <h2>관리자 메뉴</h2>
+                        <h2>메뉴</h2>
                         <ul>
-                            <li><Link to="/insert" onClick={() => setIsMenuOpen(false)}>콘텐츠 등록</Link></li>
-                            <li><Link to="/delete" onClick={() => setIsMenuOpen(false)}>콘텐츠 삭제</Link></li>
-                            <li><Link to="/check" onClick={() => setIsMenuOpen(false)}>과제 확인</Link></li>
+                            <li><Link to="/rank" onClick={() => setIsMenuOpen(false)}>Rank</Link></li>
+                            <li><Link to="/update" onClick={() => setIsMenuOpen(false)}>Update</Link></li>
+                            {(loginStatus === 'manager' || loginStatus === 'admin') && (
+                                <>
+                                    <li><Link to="/insert" onClick={() => setIsMenuOpen(false)}>Insert</Link></li>
+                                    <li><Link to="/delete" onClick={() => setIsMenuOpen(false)}>Delete</Link></li>
+                                    <li><Link to="/check" onClick={() => setIsMenuOpen(false)}>Check</Link></li>
+                                </>
+                            )}
                             {loginStatus === 'admin' && (
-                                <li><Link to="/user" onClick={() => setIsMenuOpen(false)}>회원 관리</Link></li>
+                                <li><Link to="/user" onClick={() => setIsMenuOpen(false)}>User</Link></li>
                             )}
                         </ul>
                     </nav>
                 </div>
             )}
 
-            {/* 오버레이 */}
             {isMenuOpen && (
                 <div className="menu-overlay" onClick={() => setIsMenuOpen(false)}></div>
             )}
