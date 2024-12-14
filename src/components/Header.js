@@ -86,6 +86,7 @@ function Header() {
                             <>
                                 <li><Link to="/welcome">Welcome</Link></li>
                                 <li><Link to="/rank">Rank</Link></li>
+                                <li><Link to="/update">Update</Link></li>
                                 <li onClick={handleLogout} style={{ cursor: 'pointer' }}>Logout</li>
                             </>
                         )}
