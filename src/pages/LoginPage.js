@@ -101,9 +101,9 @@ function LoginPage() {
                 >
                     로그인
                 </button>
+                {error && <p className="error-message">{error}</p>}
+                {success && <p className="success-message">{success}</p>}
             </form>
-            {error && <p className="error-message">{error}</p>}
-            {success && <p className="success-message">{success}</p>}
         </div>
     );
 }
