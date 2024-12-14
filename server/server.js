@@ -800,7 +800,8 @@ app.use((err, req, res, next) => {
 
 app.get('/api/check-github/:githubId', async (req, res) => {
     const { githubId } = req.params;
-    const githubToken = req.headers.authorization?.split(' ')[1];
+    const authHeader = req.headers.authorization;
+    const githubToken = authHeader?.split(' ')[1];
 
     if (!githubToken) {
         return res.status(400).json({ error: 'GitHub 토큰이 필요합니다.' });
@@ -808,21 +809,30 @@ app.get('/api/check-github/:githubId', async (req, res) => {
 
     try {
         const octokit = new Octokit({
-            auth: githubToken
+            auth: githubToken  // 'token ' 접두어 제거
         });
 
-        const response = await octokit.users.getByUsername({
-            username: githubId
-        });
-        
-        if (response.status === 200) {
-            res.json({ valid: true });
+        try {
+            const response = await octokit.users.getByUsername({
+                username: githubId
+            });
+            
+            if (response.status === 200) {
+                // GitHub 사용자가 실제로 존재하는지 확인
+                res.json({ valid: true });
+            }
+        } catch (error) {
+            if (error.status === 404) {
+                res.status(404).json({ error: '존재하지 않는 GitHub 계정입니다.' });
+            } else {
+                throw error;  // 다른 오류는 아래의 catch 블록으로 전달
+            }
         }
     } catch (error) {
-        if (error.status === 404) {
-            res.status(404).json({ error: '존재하지 않는 GitHub 계정입니다.' });
+        console.error('GitHub API 에러:', error);
+        if (error.status === 401) {
+            res.status(401).json({ error: 'GitHub 토큰이 유효하지 않습니다.' });
         } else {
-            console.error('GitHub API 에러:', error);
             res.status(500).json({ error: 'GitHub 계정 확인 중 오류가 발생했습니다.' });
         }
     }
@@ -867,6 +877,109 @@ app.delete('/api/iframe-data/:idx', async (req, res) => {
     } catch (error) {
         console.error('모듈 삭제 중 오류:', error);
         res.status(500).json({ error: '모듈 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
+// 사용자 정보 조회 API
+app.get('/api/user/:userId', async (req, res) => {
+    try {
+        const [results] = await db.promise().query(
+            'SELECT id, name, github_id, github_token FROM user WHERE id = ?',
+            [req.params.userId]
+        );
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        res.json(results[0]);
+    } catch (error) {
+        console.error('사용자 정보 조회 중 오류:', error);
+        res.status(500).json({ error: '사용자 정보 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 사용자 정보 수정 API
+app.put('/api/user/:userId', async (req, res) => {
+    const { name, githubId, githubToken, currentPassword, newPassword } = req.body;
+    const userId = req.params.userId;
+
+    try {
+        // 현재 사용자 정보 조회
+        const [users] = await db.promise().query(
+            'SELECT * FROM user WHERE id = ?',
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 비밀번호 변경이 요청된 경우
+        if (newPassword) {
+            const isMatch = await bcrypt.compare(currentPassword, users[0].pw);
+            if (!isMatch) {
+                return res.status(401).json({ error: '현재 비밀번호가 일치하지 않습니다.' });
+            }
+            
+            // 새 비밀번호 해시
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+            
+            // 모든 정보 업데이트
+            await db.promise().query(
+                'UPDATE user SET name = ?, github_id = ?, github_token = ?, pw = ? WHERE id = ?',
+                [name, githubId, githubToken, hashedNewPassword, userId]
+            );
+        } else {
+            // 비밀번호를 제외한 정보만 업데이트
+            await db.promise().query(
+                'UPDATE user SET name = ?, github_id = ?, github_token = ? WHERE id = ?',
+                [name, githubId, githubToken, userId]
+            );
+        }
+
+        res.json({ message: '사용자 정보가 성공적으로 업데이트되었습니다.' });
+    } catch (error) {
+        console.error('사용자 정보 수정 중 오류:', error);
+        res.status(500).json({ error: '사용자 정보 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+// 비밀번호 변경 API
+app.put('/api/user/:userId/password', async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.params.userId;
+
+    try {
+        // 현재 사용자 정보 조회
+        const [users] = await db.promise().query(
+            'SELECT * FROM user WHERE id = ?',
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // 현재 비밀번호 확인
+        const isMatch = await bcrypt.compare(currentPassword, users[0].pw);
+        if (!isMatch) {
+            return res.status(401).json({ error: '현재 비밀번호가 일치하지 않습니다.' });
+        }
+
+        // 새 비밀번호 해시
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // 비밀번호 업데이트
+        await db.promise().query(
+            'UPDATE user SET pw = ? WHERE id = ?',
+            [hashedNewPassword, userId]
+        );
+
+        res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+    } catch (error) {
+        console.error('비밀번호 변경 중 오류:', error);
+        res.status(500).json({ error: '비밀번호 변경 중 오류가 발생했습니다.' });
     }
 });
 
