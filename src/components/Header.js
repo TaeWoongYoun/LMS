@@ -69,7 +69,7 @@ function Header() {
     return (
         <header>
             <div className='logo'>
-                <h1><Link to="/">W-LMS</Link></h1>
+                <h1><Link to="/">WLMS</Link></h1>
             </div>
             <div className="header-right">
                 <nav className="main-nav">

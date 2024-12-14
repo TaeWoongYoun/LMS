@@ -6,7 +6,7 @@ function Footer() {
     return (
         <footer>
             <div className='logo'>
-                <h1><Link to="/">DBSWEB</Link></h1>
+                <h1><Link to="/">WLMS</Link></h1>
             </div>
             <address>© 2024 TaeWoongYoun. All rights reserved.</address>
             <div className='sns'>
