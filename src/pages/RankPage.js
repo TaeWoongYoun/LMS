@@ -7,6 +7,7 @@ import goldImg from '../assets/gold.png';
 import platinumImg from '../assets/platinum.png';
 import diamondImg from '../assets/diamond.png';
 import seraphim from '../assets/seraphim.png'
+import { Navigate } from 'react-router-dom';
 
 function RankPage() {
     const [rankings, setRankings] = useState([]);
@@ -45,6 +46,11 @@ function RankPage() {
 
     if (loading) {
         return <div className="loading">로딩 중...</div>;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        return <Navigate to="/" />;
     }
 
     return (

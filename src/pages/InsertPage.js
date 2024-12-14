@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import './styles/InsertPage.css'
 
 const InsertPage = () => {
@@ -108,6 +109,11 @@ const InsertPage = () => {
       setIsLoading(false);
     }
   };
+
+  const userRole = localStorage.getItem('userRole');
+    if (userRole !== 'admin' && userRole !== 'manager') {
+        return <Navigate to="/" />;
+    }
 
   return (
     <div className='main-container'>

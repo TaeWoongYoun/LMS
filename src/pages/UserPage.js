@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import './styles/UserPage.css';
+import { Navigate } from 'react-router-dom';
 
 const UserPage = () => {
     const [users, setUsers] = useState([]);
@@ -112,60 +112,57 @@ const UserPage = () => {
         return <div className="error-message">{error}</div>;
     }
 
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    if (userRoleFromStorage !== 'admin') {
+        return <Navigate to="/" />;
+    }
+
     return (
         <div className="user-area">
-            {userRole === 'admin' ? (
-                <>
-                    <h1>회원 목록</h1>
-                    <table className="user-table">
-                        <thead>
-                            <tr>
-                                <th>번호</th>
-                                <th>아이디</th>
-                                <th>이름</th>
-                                <th>권한</th>
-                                <th>관리</th>
+            <>
+                <h1>회원 목록</h1>
+                <table className="user-table">
+                    <thead>
+                        <tr>
+                            <th>번호</th>
+                            <th>아이디</th>
+                            <th>이름</th>
+                            <th>권한</th>
+                            <th>관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {users.map(user => (
+                            <tr key={user.idx}>
+                                <td>{user.idx}</td>
+                                <td>{user.id}</td>
+                                <td>{user.name}</td>
+                                <td>
+                                    <select 
+                                        key={`role-${user.idx}`} 
+                                        value={user.role || 'user'} 
+                                        onChange={e => handleRoleChange(user.idx, e.target.value, user.id)} 
+                                        className={`role-select ${user.id === currentUserId ? 'disabled' : ''}`}
+                                        disabled={user.id === currentUserId}
+                                    >
+                                        <option value="user">일반회원</option>
+                                        <option value="manager">담당자</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <button 
+                                        onClick={() => handleDelete(user.idx, user.id)} 
+                                        className="delete-button"
+                                        disabled={user.id === currentUserId}
+                                    >
+                                        회원 퇴출
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {users.map(user => (
-                                <tr key={user.idx}>
-                                    <td>{user.idx}</td>
-                                    <td>{user.id}</td>
-                                    <td>{user.name}</td>
-                                    <td>
-                                        <select 
-                                            key={`role-${user.idx}`} 
-                                            value={user.role || 'user'} 
-                                            onChange={e => handleRoleChange(user.idx, e.target.value, user.id)} 
-                                            className={`role-select ${user.id === currentUserId ? 'disabled' : ''}`}
-                                            disabled={user.id === currentUserId}
-                                        >
-                                            <option value="user">일반회원</option>
-                                            <option value="manager">담당자</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button 
-                                            onClick={() => handleDelete(user.idx, user.id)} 
-                                            className="delete-button"
-                                            disabled={user.id === currentUserId}
-                                        >
-                                            회원 퇴출
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </>
-            ) : (
-                <div className="access-denied">
-                    <h2>접근 권한이 없습니다</h2>
-                    <p>이 페이지는 관리자만 접근할 수 있습니다.</p>
-                    <Link to="/">메인 페이지로 돌아가기</Link>
-                </div>
-            )}
+                        ))}
+                    </tbody>
+                </table>
+            </>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './styles/UpdatePage.css';
+import { Navigate } from 'react-router-dom';
 
 const UpdatePage = () => {
     const [activeTab, setActiveTab] = useState('info');
@@ -148,8 +149,9 @@ const UpdatePage = () => {
         }
     };
 
-    if (!userId) {
-        return <div className="error-message">로그인이 필요합니다.</div>;
+    const token = localStorage.getItem('token');
+    if (!token) {
+        return <Navigate to="/" />;
     }
 
     return (

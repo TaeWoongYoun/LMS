@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import './styles/DeletePage.css'
 
-function DataPage() {
+function DeletePage() {
     const [searchTerm, setSearchTerm] = useState(''); 
     const [selectedLevel, setSelectedLevel] = useState('');
     const [selectedModule, setSelectedModule] = useState(''); 
@@ -81,91 +81,88 @@ function DataPage() {
         }
     };
 
+    const userRoleFromStorage = localStorage.getItem('userRole');
+    if (userRoleFromStorage !== 'admin' && userRoleFromStorage !== 'manager') {
+        return <Navigate to="/" />;
+    }
+
     return (
         <div className="data-page">
             <div className="content">
-                {(userRole === 'admin' || userRole === 'manager') ? (
-                    <>
-                        <h1>데이터 관리</h1>
-                        <div className='search-area'>
-                            <div>
-                                <select 
-                                    value={selectedLevel}
-                                    onChange={(e) => setSelectedLevel(e.target.value)}
-                                >
-                                    <option value="">난이도(전체)</option>
-                                    <option value="0">Lv. 0</option>
-                                    <option value="1">Lv. 1</option>
-                                    <option value="2">Lv. 2</option>
-                                    <option value="3">Lv. 3</option>
-                                    <option value="4">Lv. 4</option>
-                                    <option value="5">Lv. 5</option>
-                                </select>
-                                <select 
-                                    value={selectedModule}
-                                    onChange={(e) => setSelectedModule(e.target.value)}
-                                >
-                                    <option value="">모듈(전체)</option>
-                                    <option value="A">A모듈</option>
-                                    <option value="B">B모듈</option>
-                                </select>
-                            </div>
-                            <input 
-                                type="text" 
-                                placeholder="검색" 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                <>
+                    <h1>데이터 관리</h1>
+                    <div className='search-area'>
+                        <div>
+                            <select 
+                                value={selectedLevel}
+                                onChange={(e) => setSelectedLevel(e.target.value)}
+                            >
+                                <option value="">난이도(전체)</option>
+                                <option value="0">Lv. 0</option>
+                                <option value="1">Lv. 1</option>
+                                <option value="2">Lv. 2</option>
+                                <option value="3">Lv. 3</option>
+                                <option value="4">Lv. 4</option>
+                                <option value="5">Lv. 5</option>
+                            </select>
+                            <select 
+                                value={selectedModule}
+                                onChange={(e) => setSelectedModule(e.target.value)}
+                            >
+                                <option value="">모듈(전체)</option>
+                                <option value="A">A모듈</option>
+                                <option value="B">B모듈</option>
+                            </select>
                         </div>
-
-                        {error && <div className="error-message">{error}</div>}
-                        
-                        {isLoading ? (
-                            <div className="loading-message">데이터를 불러오는 중...</div>
-                        ) : (
-                            <div className="table-area">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>난이도</th>
-                                            <th>모듈</th>
-                                            <th>폴더명</th>
-                                            <th>부가설명</th>
-                                            <th>관리</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.map((item) => (
-                                            <tr key={item.idx}>
-                                                <td>Lv. {item.level}</td>
-                                                <td>{item.module}모듈</td>
-                                                <td>{item.name}</td>
-                                                <td>{item.description}</td>
-                                                <td>
-                                                    <button 
-                                                        onClick={() => handleDelete(item)}
-                                                        className="delete-btn"
-                                                    >
-                                                        삭제
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div className="access-denied">
-                        <h2>접근 권한이 없습니다</h2>
-                        <p>이 페이지는 관리자만 접근할 수 있습니다.</p>
-                        <Link to="/">메인 페이지로 돌아가기</Link>
+                        <input 
+                            type="text" 
+                            placeholder="검색" 
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                )}
+
+                    {error && <div className="error-message">{error}</div>}
+                    
+                    {isLoading ? (
+                        <div className="loading-message">데이터를 불러오는 중...</div>
+                    ) : (
+                        <div className="table-area">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>난이도</th>
+                                        <th>모듈</th>
+                                        <th>폴더명</th>
+                                        <th>부가설명</th>
+                                        <th>관리</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.map((item) => (
+                                        <tr key={item.idx}>
+                                            <td>Lv. {item.level}</td>
+                                            <td>{item.module}모듈</td>
+                                            <td>{item.name}</td>
+                                            <td>{item.description}</td>
+                                            <td>
+                                                <button 
+                                                    onClick={() => handleDelete(item)}
+                                                    className="delete-btn"
+                                                >
+                                                    삭제
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </>
             </div>
         </div>
     );
 }
 
-export default DataPage;
+export default DeletePage;

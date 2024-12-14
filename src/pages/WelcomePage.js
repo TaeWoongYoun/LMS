@@ -1,7 +1,13 @@
 import React from 'react';
 import './styles/WelcomePage.css';
+import { Navigate } from 'react-router-dom';
 
 function WelcomePage() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        return <Navigate to="/" />;
+    }
+
     return (
         <div className="welcome-container">
             <main className="main-content">
