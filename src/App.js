@@ -35,7 +35,7 @@ function App() {
           <Route path='/update' element={<UpdatePage />} />
           <Route path='/board' element={<BoardPage />} />
           <Route path='/writepost' element={<WritePostPage />} />
-          <Route path='/postdetail' element={<PostDetailPage />} />
+          <Route path='/postdetail/:id' element={<PostDetailPage />} />
         </Routes>
         <Footer />
       </Router>

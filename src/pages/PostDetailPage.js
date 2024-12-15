@@ -7,7 +7,7 @@ function PostDetailPage() {
     const [post, setPost] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { category, id } = useParams();
+    const { id } = useParams();
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
 
@@ -17,7 +17,7 @@ function PostDetailPage() {
 
     const fetchPost = async () => {
         try {
-            const response = await axios.get(`http://localhost:3001/api/posts/${category}/${id}`);
+            const response = await axios.get(`http://localhost:3001/api/posts/${id}`);
             setPost(response.data);
         } catch (error) {
             setError('게시글을 불러오는데 실패했습니다.');
