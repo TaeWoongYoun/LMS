@@ -128,8 +128,7 @@ function BoardPage() {
                                 <th width="10%">번호</th>
                                 <th width="50%">제목</th>
                                 <th width="15%">작성자</th>
-                                <th width="15%">작성일</th>
-                                <th width="10%">조회수</th>
+                                <th width="25%">작성일</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -143,7 +142,6 @@ function BoardPage() {
                                     </td>
                                     <td>{post.author_name}</td>
                                     <td>{formatDate(post.created_at)}</td>
-                                    <td>{post.views}</td>
                                 </tr>
                             ))}
                         </tbody>

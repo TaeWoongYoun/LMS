@@ -1055,35 +1055,22 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// 게시글 상세 조회 API
+// 게시글 조회 API
 app.get('/api/posts/:id', async (req, res) => {
     const { id } = req.params;
 
     try {
-        await db.promise().beginTransaction();
-
         const [posts] = await db.promise().query(
             'SELECT * FROM board_posts WHERE id = ?',
             [id]
         );
 
         if (posts.length === 0) {
-            await db.promise().rollback();
             return res.status(404).json({ error: '게시글을 찾을 수 없습니다.' });
         }
 
-        await db.promise().query(
-            'UPDATE board_posts SET views = views + 1 WHERE id = ?',
-            [id]
-        );
-
-        await db.promise().commit();
-
-        posts[0].views += 1;
-
         res.json(posts[0]);
     } catch (error) {
-        await db.promise().rollback();
         console.error('게시글 조회 중 오류:', error);
         res.status(500).json({ error: '게시글 조회 중 오류가 발생했습니다.' });
     }
