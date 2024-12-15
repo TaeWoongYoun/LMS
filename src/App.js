@@ -15,6 +15,7 @@ import UpdatePage from './pages/UpdatePage.js';
 import BoardPage from './pages/BoardPage.js';
 import WritePostPage from './pages/WritePostPage.js';
 import PostDetailPage from './pages/PostDetailPage.js';
+import PostEditPage from './pages/PostEditPage.js';
 import 'prismjs/themes/prism-tomorrow.css';
 
 function App() {
@@ -36,6 +37,7 @@ function App() {
           <Route path='/board' element={<BoardPage />} />
           <Route path='/writepost' element={<WritePostPage />} />
           <Route path='/postdetail/:id' element={<PostDetailPage />} />
+          <Route path='/postedit/:id' element={<PostEditPage />} />
         </Routes>
         <Footer />
       </Router>

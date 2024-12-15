@@ -75,7 +75,7 @@ function PostDetailPage() {
                     {post.author_id === userId && (
                         <>
                             <button 
-                                onClick={() => navigate(`/board/edit/${id}`, { state: { post }})} 
+                                onClick={() => navigate(`/postedit/${id}`, { state: { post }})} 
                                 className="edit-button"
                             >
                                 수정
