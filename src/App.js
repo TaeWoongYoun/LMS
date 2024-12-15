@@ -12,6 +12,9 @@ import UserPage from './pages/UserPage.js';
 import CheckPage from './pages/CheckPage.js';
 import RankPage from './pages/RankPage.js';
 import UpdatePage from './pages/UpdatePage.js';
+import BoardPage from './pages/BoardPage.js';
+import WritePostPage from './pages/WritePostPage.js';
+import PostDetailPage from './pages/PostDetailPage.js';
 import 'prismjs/themes/prism-tomorrow.css';
 
 function App() {
@@ -30,6 +33,9 @@ function App() {
           <Route path='/check' element={<CheckPage />} />
           <Route path='/rank' element={<RankPage />} />
           <Route path='/update' element={<UpdatePage />} />
+          <Route path='/board' element={<BoardPage />} />
+          <Route path='/writepost' element={<WritePostPage />} />
+          <Route path='/postdetail' element={<PostDetailPage />} />
         </Routes>
         <Footer />
       </Router>
