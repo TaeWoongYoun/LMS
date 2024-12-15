@@ -1,42 +1,120 @@
-body {
-    margin: 0;
-    padding: 0;
-}
-
 .welcome-container {
-    display: flex;
-    flex-direction: column;
+    width: 100%;
     height: calc(100vh - 140px);
+    position: relative;
+    padding: 0 20px;
 }
 
-.main-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 1;
-    text-align: center;
-    padding: 40px;
-}
-
-.welcome-title {
-    color: #2c3e50;
-    margin-bottom: 30px;
-    font-weight: bold;
-}
-
-.message-box {
-    max-width: 800px;
-    margin: 0 auto;
+.profile-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    max-width: 900px; 
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 0px 15px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    text-align: left;
 }
 
-.message-text {
-    font-size: 1.2rem;
-    line-height: 1.6;
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-initial {
+    font-size: 64px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.profile-info h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #333;
+}
+
+.username {
+    color: #666;
+    margin: 5px 0;
+    font-size: 18px;
+}
+
+.bio {
+    color: #444;
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.stats-section,
+.about-section,
+.features-section {
+    margin: 10px 0;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.stats-section:last-child,
+.about-section:last-child,
+.features-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.stats-section h2,
+.about-section h2,
+.features-section h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    background: #f0f7ff;
+    color: #111;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}
+
+.stat-icon {
+    font-size: 20px;
+}
+
+.about-section p {
     color: #555;
-    white-space: pre-line;
+    line-height: 1.6;
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.features-section .stats-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    border: none;
+    padding: 0;
+    margin: 0;
 }
