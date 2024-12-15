@@ -983,6 +983,150 @@ app.put('/api/user/:userId/password', async (req, res) => {
     }
 });
 
+// 게시글 작성 API
+app.post('/api/posts', async (req, res) => {
+    const { category, title, content, author_id, author_name } = req.body;
+
+    try {
+        // 관리자 권한 체크 (공지사항인 경우)
+        if (category === 'notice') {
+            const [users] = await db.promise().query(
+                'SELECT role FROM user WHERE id = ?',
+                [author_id]
+            );
+
+            if (users.length === 0 || users[0].role !== 'admin') {
+                return res.status(403).json({ error: '공지사항 작성 권한이 없습니다.' });
+            }
+        }
+
+        // 게시글 작성
+        const [result] = await db.promise().query(
+            `INSERT INTO board_posts 
+                (category, title, content, author_id, author_name) 
+            VALUES (?, ?, ?, ?, ?)`,
+            [category, title, content, author_id, author_name]
+        );
+
+        res.status(201).json({
+            message: '게시글이 성공적으로 작성되었습니다.',
+            postId: result.insertId
+        });
+    } catch (error) {
+        console.error('게시글 작성 중 오류:', error);
+        res.status(500).json({ error: '게시글 작성 중 오류가 발생했습니다.' });
+    }
+});
+
+// 게시글 목록 조회 API (전체 및 카테고리별)
+app.get('/api/posts', async (req, res) => {
+    const { category, search } = req.query;
+    
+    try {
+        let sql = 'SELECT * FROM board_posts';
+        const params = [];
+        const conditions = [];
+
+        // 카테고리가 지정되어 있고 'all'이 아닌 경우
+        if (category && category !== 'all') {
+            conditions.push('category = ?');
+            params.push(category);
+        }
+
+        // 검색어가 있는 경우
+        if (search) {
+            conditions.push('(title LIKE ? OR content LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`);
+        }
+
+        // WHERE 조건 추가
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        // 정렬 추가
+        sql += ' ORDER BY created_at DESC';
+
+        const [posts] = await db.promise().query(sql, params);
+        res.json(posts);
+    } catch (error) {
+        console.error('게시글 목록 조회 중 오류:', error);
+        res.status(500).json({ error: '게시글 목록 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 게시글 상세 조회 API
+app.get('/api/posts/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 조회수 증가
+        await db.promise().query(
+            'UPDATE board_posts SET views = views + 1 WHERE id = ?',
+            [id]
+        );
+
+        // 게시글 조회
+        const [posts] = await db.promise().query(
+            'SELECT * FROM board_posts WHERE id = ?',
+            [id]
+        );
+
+        if (posts.length === 0) {
+            return res.status(404).json({ error: '게시글을 찾을 수 없습니다.' });
+        }
+
+        res.json(posts[0]);
+    } catch (error) {
+        console.error('게시글 조회 중 오류:', error);
+        res.status(500).json({ error: '게시글 조회 중 오류가 발생했습니다.' });
+    }
+});
+
+// 게시글 수정 API
+app.put('/api/posts/:id', async (req, res) => {
+    const { id } = req.params;
+    const { title, content, author_id } = req.body;
+
+    try {
+        const [result] = await db.promise().query(
+            'UPDATE board_posts SET title = ?, content = ? WHERE id = ? AND author_id = ?',
+            [title, content, id, author_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '게시글을 찾을 수 없거나 수정 권한이 없습니다.' });
+        }
+
+        res.json({ message: '게시글이 성공적으로 수정되었습니다.' });
+    } catch (error) {
+        console.error('게시글 수정 중 오류:', error);
+        res.status(500).json({ error: '게시글 수정 중 오류가 발생했습니다.' });
+    }
+});
+
+// 게시글 삭제 API
+app.delete('/api/posts/:id', async (req, res) => {
+    const { id } = req.params;
+    const { author_id } = req.body;
+
+    try {
+        const [result] = await db.promise().query(
+            'DELETE FROM board_posts WHERE id = ? AND author_id = ?',
+            [id, author_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: '게시글을 찾을 수 없거나 삭제 권한이 없습니다.' });
+        }
+
+        res.json({ message: '게시글이 성공적으로 삭제되었습니다.' });
+    } catch (error) {
+        console.error('게시글 삭제 중 오류:', error);
+        res.status(500).json({ error: '게시글 삭제 중 오류가 발생했습니다.' });
+    }
+});
+
 // 서버 시작
 startServer();
 
