@@ -5,46 +5,35 @@ import './styles/PostDetailPage.css';
 
 function PostDetailPage() {
     const [post, setPost] = useState(null);
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const { id } = useParams();
     const navigate = useNavigate();
     const userId = localStorage.getItem('userId');
-    const viewedKey = `post_${id}_viewed`;
- 
+    const userName = localStorage.getItem('userName');
+
     useEffect(() => {
         const fetchPost = async () => {
-            // 이미 조회한 게시글인지 확인
-            if (sessionStorage.getItem(viewedKey)) {
-                try {
-                    const response = await axios.get(`http://localhost:3001/api/posts/${id}?skipViewCount=true`);
-                    setPost(response.data);
-                } catch (error) {
-                    setError('게시글을 불러오는데 실패했습니다.');
-                } finally {
-                    setIsLoading(false);
-                }
-                return;
-            }
- 
             try {
                 const response = await axios.get(`http://localhost:3001/api/posts/${id}`);
                 setPost(response.data);
-                // 조회 기록 저장
-                sessionStorage.setItem(viewedKey, 'true');
+                const commentsResponse = await axios.get(`http://localhost:3001/api/posts/${id}/comments`);
+                setComments(commentsResponse.data);
             } catch (error) {
                 setError('게시글을 불러오는데 실패했습니다.');
             } finally {
                 setIsLoading(false);
             }
         };
- 
+
         fetchPost();
-    }, [id, viewedKey]);
- 
+    }, [id]);
+
     const handleDelete = async () => {
         if (!window.confirm('정말로 삭제하시겠습니까?')) return;
- 
+
         try {
             await axios.delete(`http://localhost:3001/api/posts/${id}`, {
                 data: { author_id: userId }
@@ -54,7 +43,38 @@ function PostDetailPage() {
             setError('게시글 삭제에 실패했습니다.');
         }
     };
- 
+
+    const handleCommentSubmit = async (e) => {
+        e.preventDefault();
+        if (!newComment.trim()) return;
+
+        try {
+            const response = await axios.post(`http://localhost:3001/api/posts/${id}/comments`, {
+                content: newComment,
+                author_id: userId,
+                author_name: userName
+            });
+
+            setComments([response.data, ...comments]);
+            setNewComment('');
+        } catch (error) {
+            setError('댓글 작성에 실패했습니다.');
+        }
+    };
+
+    const handleCommentDelete = async (commentId) => {
+        if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
+
+        try {
+            await axios.delete(`http://localhost:3001/api/comments/${commentId}`, {
+                data: { author_id: userId }
+            });
+            setComments(comments.filter(comment => comment.id !== commentId));
+        } catch (error) {
+            setError('댓글 삭제에 실패했습니다.');
+        }
+    };
+
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         return date.toLocaleDateString('ko-KR', { 
@@ -65,11 +85,11 @@ function PostDetailPage() {
             minute: '2-digit'
         });
     };
- 
+
     if (isLoading) return <div className="loading">로딩 중...</div>;
     if (error) return <div className="error">{error}</div>;
     if (!post) return <div className="error">게시글을 찾을 수 없습니다.</div>;
- 
+
     return (
         <div className="post-detail-container">
             <div className="post-detail-box">
@@ -83,6 +103,42 @@ function PostDetailPage() {
                 <div className="post-content">
                     {post.content}
                 </div>
+                
+                <div className="comments-section">
+                    <h3>댓글</h3>
+                    <form onSubmit={handleCommentSubmit} className="comment-form">
+                        <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="댓글을 입력하세요"
+                            className="comment-input"
+                        />
+                        <button type="submit" className="comment-submit">댓글 작성</button>
+                    </form>
+
+                    <div className="comments-list">
+                        {comments.map((comment) => (
+                            <div key={comment.id} className="comment">
+                                <div className="comment-header">
+                                    <span className="comment-author">{comment.author_name}</span>
+                                    <span className="comment-date">{formatDate(comment.created_at)}</span>
+                                    {comment.author_id === userId && (
+                                        <button 
+                                            onClick={() => handleCommentDelete(comment.id)}
+                                            className="delete-button"
+                                        >
+                                            삭제
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="comment-content">
+                                    {comment.content}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
                 <div className="button-group">
                     <button onClick={() => navigate('/board')} className="back-button">
                         목록으로
@@ -104,6 +160,6 @@ function PostDetailPage() {
             </div>
         </div>
     );
- }
+}
 
 export default PostDetailPage;
