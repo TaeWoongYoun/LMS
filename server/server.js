@@ -437,7 +437,6 @@ app.post('/api/complete-assignment', async (req, res) => {
     try {
         await db.promise().beginTransaction();
 
-        // 먼저 user의 이름을 가져옵니다
         const [userResults] = await db.promise().query(
             'SELECT name FROM user WHERE id = ?',
             [userId]
@@ -450,14 +449,12 @@ app.post('/api/complete-assignment', async (req, res) => {
 
         const userName = userResults[0].name;
 
-        // 1. 제출된 과제의 이미지 경로 조회
         const [submissions] = await db.promise().query(
             'SELECT image_path FROM submissions WHERE user_id = ? AND assignment_name = ?',
             [userId, assignmentName]
         );
 
         if (submissions.length > 0) {
-            // 2. 이미지 파일 삭제
             const imagePath = submissions[0].image_path;
             const fullImagePath = path.join(__dirname, 'public', imagePath);
             
@@ -469,13 +466,11 @@ app.post('/api/complete-assignment', async (req, res) => {
             }
         }
 
-        // 3. 완료된 과제 테이블에 추가
         await db.promise().query(
             'INSERT INTO completed_assignments (user_id, user_name, assignment_name) VALUES (?, ?, ?)',
             [userId, userName, assignmentName]
         );
 
-        // 4. 제출 테이블에서 과제 삭제
         await db.promise().query(
             'DELETE FROM submissions WHERE user_id = ? AND assignment_name = ?',
             [userId, assignmentName]
@@ -552,10 +547,8 @@ app.delete('/api/users/:idx', async (req, res) => {
     const userIdx = req.params.idx;
     
     try {
-        // 트랜잭션 시작
         await db.promise().beginTransaction();
 
-        // 사용자 정보 조회
         const [userResults] = await db.promise().query(
             'SELECT id FROM user WHERE idx = ? AND id != "admin"',
             [userIdx]
@@ -568,13 +561,11 @@ app.delete('/api/users/:idx', async (req, res) => {
 
         const userId = userResults[0].id;
 
-        // 1. submissions 테이블에서 사용자의 이미지 파일 경로 조회
         const [submissions] = await db.promise().query(
             'SELECT image_path FROM submissions WHERE user_id = ?',
             [userId]
         );
 
-        // 2. 이미지 파일 삭제
         for (const submission of submissions) {
             if (submission.image_path) {
                 const fullImagePath = path.join(__dirname, 'public', submission.image_path);
@@ -587,19 +578,16 @@ app.delete('/api/users/:idx', async (req, res) => {
             }
         }
 
-        // 3. completed_assignments 테이블에서 사용자 데이터 삭제
         await db.promise().query(
             'DELETE FROM completed_assignments WHERE user_id = ?',
             [userId]
         );
 
-        // 4. submissions 테이블에서 사용자 데이터 삭제
         await db.promise().query(
             'DELETE FROM submissions WHERE user_id = ?',
             [userId]
         );
 
-        // 5. 마지막으로 user 테이블에서 사용자 삭제
         const [result] = await db.promise().query(
             'DELETE FROM user WHERE idx = ? AND id != "admin"',
             [userIdx]
@@ -610,12 +598,10 @@ app.delete('/api/users/:idx', async (req, res) => {
             return res.status(404).json({ error: '사용자를 찾을 수 없거나 관리자 계정입니다.' });
         }
 
-        // 트랜잭션 커밋
         await db.promise().commit();
         
         res.json({ message: '사용자가 성공적으로 삭제되었습니다.' });
     } catch (err) {
-        // 에러 발생 시 롤백
         await db.promise().rollback();
         console.error('사용자 삭제 중 오류:', err);
         res.status(500).json({ error: '사용자 삭제 중 오류가 발생했습니다.' });
@@ -675,12 +661,10 @@ app.post('/api/save-module', async (req, res) => {
             });
         }
 
-        // 프로젝트 루트의 public 폴더 경로 설정
         const moduleDir = path.join('..', 'public', path.dirname(iframeData.path));
 
         await ensureDirectoryExists(moduleDir);
 
-        // 파일 저장
         await fs.writeFile(path.join(moduleDir, 'index.html'), files.html, 'utf8');
         await fs.writeFile(path.join(moduleDir, 'style.css'), files.css || '/* No CSS provided */', 'utf8');
         if (files.js) {
@@ -809,7 +793,7 @@ app.get('/api/check-github/:githubId', async (req, res) => {
 
     try {
         const octokit = new Octokit({
-            auth: githubToken  // 'token ' 접두어 제거
+            auth: githubToken
         });
 
         try {
@@ -818,14 +802,13 @@ app.get('/api/check-github/:githubId', async (req, res) => {
             });
             
             if (response.status === 200) {
-                // GitHub 사용자가 실제로 존재하는지 확인
                 res.json({ valid: true });
             }
         } catch (error) {
             if (error.status === 404) {
                 res.status(404).json({ error: '존재하지 않는 GitHub 계정입니다.' });
             } else {
-                throw error;  // 다른 오류는 아래의 catch 블록으로 전달
+                throw error;
             }
         }
     } catch (error) {
@@ -838,12 +821,11 @@ app.get('/api/check-github/:githubId', async (req, res) => {
     }
 });
 
-// 모듈 삭제 API 추가
+// 모듈 삭제 API
 app.delete('/api/iframe-data/:idx', async (req, res) => {
     const { idx } = req.params;
 
     try {
-        // 1. 먼저 삭제할 모듈의 정보를 가져옵니다
         const [modules] = await db.promise().query(
             'SELECT path FROM iframe_data WHERE idx = ?',
             [idx]
@@ -853,7 +835,6 @@ app.delete('/api/iframe-data/:idx', async (req, res) => {
             return res.status(404).json({ error: '모듈을 찾을 수 없습니다.' });
         }
 
-        // 2. 파일 시스템에서 관련 파일들을 삭제합니다
         const modulePath = path.join('..', 'public', path.dirname(modules[0].path));
         try {
             await fs.rm(modulePath, { recursive: true, force: true });
@@ -863,7 +844,6 @@ app.delete('/api/iframe-data/:idx', async (req, res) => {
             return res.status(500).json({ error: '파일 삭제 중 오류가 발생했습니다.' });
         }
 
-        // 3. 데이터베이스에서 모듈 정보를 삭제합니다
         const [result] = await db.promise().query(
             'DELETE FROM iframe_data WHERE idx = ?',
             [idx]
@@ -905,7 +885,6 @@ app.put('/api/user/:userId', async (req, res) => {
     const userId = req.params.userId;
 
     try {
-        // 현재 사용자 정보 조회
         const [users] = await db.promise().query(
             'SELECT * FROM user WHERE id = ?',
             [userId]
@@ -915,23 +894,19 @@ app.put('/api/user/:userId', async (req, res) => {
             return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
         }
 
-        // 비밀번호 변경이 요청된 경우
         if (newPassword) {
             const isMatch = await bcrypt.compare(currentPassword, users[0].pw);
             if (!isMatch) {
                 return res.status(401).json({ error: '현재 비밀번호가 일치하지 않습니다.' });
             }
             
-            // 새 비밀번호 해시
             const hashedNewPassword = await bcrypt.hash(newPassword, 10);
             
-            // 모든 정보 업데이트
             await db.promise().query(
                 'UPDATE user SET name = ?, github_id = ?, github_token = ?, pw = ? WHERE id = ?',
                 [name, githubId, githubToken, hashedNewPassword, userId]
             );
         } else {
-            // 비밀번호를 제외한 정보만 업데이트
             await db.promise().query(
                 'UPDATE user SET name = ?, github_id = ?, github_token = ? WHERE id = ?',
                 [name, githubId, githubToken, userId]
@@ -951,7 +926,6 @@ app.put('/api/user/:userId/password', async (req, res) => {
     const userId = req.params.userId;
 
     try {
-        // 현재 사용자 정보 조회
         const [users] = await db.promise().query(
             'SELECT * FROM user WHERE id = ?',
             [userId]
@@ -961,16 +935,13 @@ app.put('/api/user/:userId/password', async (req, res) => {
             return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
         }
 
-        // 현재 비밀번호 확인
         const isMatch = await bcrypt.compare(currentPassword, users[0].pw);
         if (!isMatch) {
             return res.status(401).json({ error: '현재 비밀번호가 일치하지 않습니다.' });
         }
 
-        // 새 비밀번호 해시
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-        // 비밀번호 업데이트
         await db.promise().query(
             'UPDATE user SET pw = ? WHERE id = ?',
             [hashedNewPassword, userId]
@@ -988,7 +959,6 @@ app.post('/api/posts', async (req, res) => {
     const { category, title, content, author_id, author_name } = req.body;
 
     try {
-        // 관리자 권한 체크 (공지사항인 경우)
         if (category === 'notice') {
             const [users] = await db.promise().query(
                 'SELECT role FROM user WHERE id = ?',
@@ -1000,7 +970,6 @@ app.post('/api/posts', async (req, res) => {
             }
         }
 
-        // 게시글 작성
         const [result] = await db.promise().query(
             `INSERT INTO board_posts 
                 (category, title, content, author_id, author_name) 
@@ -1027,24 +996,20 @@ app.get('/api/posts', async (req, res) => {
         const params = [];
         const conditions = [];
 
-        // 카테고리가 지정되어 있고 'all'이 아닌 경우
         if (category && category !== 'all') {
             conditions.push('category = ?');
             params.push(category);
         }
 
-        // 검색어가 있는 경우
         if (search) {
             conditions.push('(title LIKE ? OR content LIKE ?)');
             params.push(`%${search}%`, `%${search}%`);
         }
 
-        // WHERE 조건 추가
         if (conditions.length > 0) {
             sql += ' WHERE ' + conditions.join(' AND ');
         }
 
-        // 정렬 추가
         sql += ' ORDER BY created_at DESC';
 
         const [posts] = await db.promise().query(sql, params);
