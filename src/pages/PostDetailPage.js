@@ -106,21 +106,15 @@ function PostDetailPage() {
                 
                 <div className="comments-section">
                     <h3>댓글</h3>
-                    <form onSubmit={handleCommentSubmit} className="comment-form">
-                        <textarea
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="댓글을 입력하세요"
-                            className="comment-input"
-                        />
-                        <button type="submit" className="comment-submit">댓글 작성</button>
-                    </form>
 
                     <div className="comments-list">
                         {comments.map((comment) => (
                             <div key={comment.id} className="comment">
                                 <div className="comment-header">
                                     <span className="comment-author">{comment.author_name}</span>
+                                    <div className="comment-content">
+                                        {comment.content}
+                                    </div>
                                     <span className="comment-date">{formatDate(comment.created_at)}</span>
                                     {comment.author_id === userId && (
                                         <button 
@@ -131,12 +125,19 @@ function PostDetailPage() {
                                         </button>
                                     )}
                                 </div>
-                                <div className="comment-content">
-                                    {comment.content}
-                                </div>
                             </div>
                         ))}
                     </div>
+
+                    <form onSubmit={handleCommentSubmit} className="comment-form">
+                        <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="댓글을 입력하세요"
+                            className="comment-input"
+                        />
+                        <button type="submit" className="comment-submit">댓글 작성</button>
+                    </form>
                 </div>
 
                 <div className="button-group">

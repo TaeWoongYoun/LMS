@@ -131,14 +131,13 @@
 }
 
 .comment-header {
-    display: flex;
-    justify-content: space-between;
     margin-bottom: 8px;
+    text-align: left;
+    line-height: 1.6;
 }
 
 .comment-author {
-    font-weight: bold;
-    color: #333;
+    color: #111;
 }
 
 .comment-date {
@@ -147,8 +146,7 @@
 }
 
 .comment-content {
-    line-height: 1.4;
-    color: #444;
+    color: #111;
 }
 
 .comment-form {
@@ -206,6 +204,7 @@
 .delete-button {
     background-color: #dc3545;
     color: white;
+    float: right;
 }
 
 .button-group button:hover {
