@@ -1085,6 +1085,62 @@ app.delete('/api/posts/:id', async (req, res) => {
     }
 });
 
+// 댓글 목록 조회
+app.get('/api/posts/:postId/comments', async (req, res) => {
+    try {
+        const [comments] = await db.promise().query(
+            'SELECT * FROM comments WHERE post_id = ? ORDER BY created_at DESC',
+            [req.params.postId]
+        );
+        res.json(comments);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: '댓글을 불러오는데 실패했습니다.' });
+    }
+});
+
+// 댓글 작성
+app.post('/api/posts/:postId/comments', async (req, res) => {
+    try {
+        const { author_id, author_name, content } = req.body;
+        const [result] = await db.promise().query(
+            'INSERT INTO comments (post_id, author_id, author_name, content) VALUES (?, ?, ?, ?)',
+            [req.params.postId, author_id, author_name, content]
+        );
+
+        // 작성된 댓글 정보 조회
+        const [newComment] = await db.promise().query(
+            'SELECT * FROM comments WHERE id = ?',
+            [result.insertId]
+        );
+
+        res.status(201).json(newComment[0]);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: '댓글 작성에 실패했습니다.' });
+    }
+});
+
+// 댓글 삭제
+app.delete('/api/comments/:id', async (req, res) => {
+    try {
+        const { author_id } = req.body;
+        const [result] = await db.promise().query(
+            'DELETE FROM comments WHERE id = ? AND author_id = ?',
+            [req.params.id, author_id]
+        );
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: '댓글을 찾을 수 없거나 삭제 권한이 없습니다.' });
+        }
+        
+        res.status(200).json({ message: '댓글이 삭제되었습니다.' });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ message: '댓글 삭제에 실패했습니다.' });
+    }
+});
+
 // 서버 시작
 startServer();
 
