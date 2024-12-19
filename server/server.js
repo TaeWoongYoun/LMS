@@ -54,6 +54,10 @@ const storage = multer.diskStorage({
     }
 });
 
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 },
