@@ -1,3 +1,5 @@
+import { EventEmitter } from 'events';
+EventEmitter.defaultMaxListeners = 15;
 import express from 'express';
 import mysql from 'mysql2';
 import bcrypt from 'bcryptjs';
@@ -52,10 +54,6 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
     }
-});
-
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const upload = multer({
@@ -1145,6 +1143,10 @@ app.delete('/api/comments/:id', async (req, res) => {
     }
 });
 
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+    
 // 서버 시작
 startServer();
 
