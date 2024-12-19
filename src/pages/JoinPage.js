@@ -34,7 +34,7 @@ function JoinPage() {
         }
     
         try {
-            const response = await axios.get(`http://localhost:3001/api/check-github/${githubId}`, {
+            const response = await axios.get(`http://10.142.46.1:3001/api/check-github/${githubId}`, {
                 headers: {
                     'Authorization': `token ${githubToken}`
                 }
@@ -64,7 +64,7 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://localhost:3001/api/check-id', { id });
+            const response = await axios.post('http://10.142.46.1:3001/api/check-id', { id });
             if (response.data.available) {
                 setSuccess('사용 가능한 아이디입니다.');
                 setError('');
@@ -137,7 +137,7 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://localhost:3001/api/register', { 
+            const response = await axios.post('http://10.142.46.1:3001/api/register', { 
                 id, 
                 pw: password, 
                 name,

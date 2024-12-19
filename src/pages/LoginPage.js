@@ -16,7 +16,7 @@ function LoginPage() {
         setSuccess('');
     
         try {
-            const response = await axios.post('http://localhost:3001/api/login', { 
+            const response = await axios.post('http://10.142.46.1:3001/api/login', { 
                 id, 
                 pw: password 
             }, {

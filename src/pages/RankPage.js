@@ -27,7 +27,7 @@ function RankPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const rankingsResponse = await axios.get('http://localhost:3001/api/rankings');
+                const rankingsResponse = await axios.get('http://10.142.46.1:3001/api/rankings');
                 setRankings(rankingsResponse.data);
                 
                 // userId로 현재 사용자 찾기

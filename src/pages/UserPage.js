@@ -33,7 +33,7 @@ const UserPage = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://localhost:3001/api/users');
+            const response = await fetch('http://10.142.46.1:3001/api/users');
             if (!response.ok) {
                 throw new Error('사용자 데이터 로딩에 실패했습니다.');
             }
@@ -54,7 +54,7 @@ const UserPage = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/api/users/${idx}/role`, {
+            const response = await fetch(`http://10.142.46.1:3001/api/users/${idx}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ const UserPage = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/api/users/${idx}`, {
+            const response = await fetch(`http://10.142.46.1:3001/api/users/${idx}`, {
                 method: 'DELETE',
             });
 

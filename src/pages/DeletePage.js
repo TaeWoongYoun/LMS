@@ -35,7 +35,7 @@ function DeletePage() {
                 search: searchTerm
             }).toString();
 
-            const response = await fetch(`http://localhost:3001/api/modules?${queryParams}`);
+            const response = await fetch(`http://10.142.46.1:3001/api/modules?${queryParams}`);
             if (!response.ok) {
                 throw new Error('데이터를 불러오는데 실패했습니다.');
             }
@@ -59,7 +59,7 @@ function DeletePage() {
         if (window.confirm('정말로 이 데이터를 삭제하시겠습니까?')) {
             try {
                 // idx를 사용하여 DELETE 요청
-                const response = await fetch(`http://localhost:3001/api/iframe-data/${item.idx}`, {
+                const response = await fetch(`http://10.142.46.1:3001/api/iframe-data/${item.idx}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',

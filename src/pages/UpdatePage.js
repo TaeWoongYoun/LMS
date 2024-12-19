@@ -21,7 +21,7 @@ const UpdatePage = () => {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const response = await axios.get(`http://localhost:3001/api/user/${userId}`);
+                const response = await axios.get(`http://10.142.46.1:3001/api/user/${userId}`);
                 const { name, github_id, github_token } = response.data;
                 setUserInfo(prev => ({
                     ...prev,
@@ -63,7 +63,7 @@ const UpdatePage = () => {
         }
 
         try {
-            const response = await axios.get(`http://localhost:3001/api/check-github/${userInfo.githubId}`, {
+            const response = await axios.get(`http://10.142.46.1:3001/api/check-github/${userInfo.githubId}`, {
                 headers: {
                     'Authorization': `Bearer ${userInfo.githubToken}`
                 }
@@ -96,7 +96,7 @@ const UpdatePage = () => {
         }
 
         try {
-            await axios.put(`http://localhost:3001/api/user/${userId}`, {
+            await axios.put(`http://10.142.46.1:3001/api/user/${userId}`, {
                 name: userInfo.name,
                 githubId: userInfo.githubId,
                 githubToken: userInfo.githubToken
@@ -129,7 +129,7 @@ const UpdatePage = () => {
         }
 
         try {
-            await axios.put(`http://localhost:3001/api/user/${userId}/password`, {
+            await axios.put(`http://10.142.46.1:3001/api/user/${userId}/password`, {
                 currentPassword: userInfo.currentPassword,
                 newPassword: userInfo.newPassword
             });

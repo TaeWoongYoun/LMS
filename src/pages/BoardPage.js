@@ -20,7 +20,7 @@ function BoardPage() {
     const fetchPosts = async () => {
         try {
             setIsLoading(true);
-            const response = await axios.get('http://localhost:3001/api/posts', {
+            const response = await axios.get('http://10.142.46.1:3001/api/posts', {
                 params: { 
                     category: category === 'all' ? null : category,
                     search 

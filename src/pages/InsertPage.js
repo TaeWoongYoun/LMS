@@ -74,7 +74,7 @@ const InsertPage = () => {
       };
 
       // API 엔드포인트로 데이터 전송
-      const response = await fetch('http://localhost:3001/api/save-module', {
+      const response = await fetch('http://10.142.46.1:3001/api/save-module', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

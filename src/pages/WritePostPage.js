@@ -24,7 +24,7 @@ function WritePostPage() {
         }
  
         try {
-            await axios.post('http://localhost:3001/api/posts', {
+            await axios.post('http://10.142.46.1:3001/api/posts', {
                 category,
                 title,
                 content,

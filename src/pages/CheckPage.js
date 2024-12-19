@@ -20,7 +20,7 @@ const CheckPage = () => {
 
     const fetchSubmissions = async () => {
         try {
-            const response = await fetch('http://localhost:3001/api/submissions');
+            const response = await fetch('http://10.142.46.1:3001/api/submissions');
             const data = await response.json();
             setSubmissions(data);
         } catch (error) {
@@ -31,7 +31,7 @@ const CheckPage = () => {
     const handleCheck = async (submission) => {
         if (window.confirm('과제를 확인하셨습니까? 확인된 과제는 목록에서 삭제됩니다.')) {
             try {
-                const response = await fetch('http://localhost:3001/api/complete-assignment', {
+                const response = await fetch('http://10.142.46.1:3001/api/complete-assignment', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ const CheckPage = () => {
                 <div className="modal-backdrop" onClick={() => setShowImageModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <img 
-                            src={`http://localhost:3001${selectedImage}`} 
+                            src={`http://10.142.46.1:3001${selectedImage}`} 
                             alt="Submission" 
                             className="modal-image"
                         />

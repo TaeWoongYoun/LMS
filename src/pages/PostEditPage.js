@@ -28,7 +28,7 @@ function PostEditPage() {
         }
 
         try {
-            await axios.put(`http://localhost:3001/api/posts/${id}`, {
+            await axios.put(`http://10.142.46.1:3001/api/posts/${id}`, {
                 title,
                 content,
                 author_id: userId
