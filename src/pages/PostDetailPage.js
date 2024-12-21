@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './styles/PostDetailPage.css';
+import { API_URL } from '../config/config';
 
 function PostDetailPage() {
     const [post, setPost] = useState(null);
@@ -17,9 +18,9 @@ function PostDetailPage() {
     useEffect(() => {
         const fetchPost = async () => {
             try {
-                const response = await axios.get(`http://10.142.46.1:3001/api/posts/${id}`);
+                const response = await axios.get(`${API_URL}/api/posts/${id}`);
                 setPost(response.data);
-                const commentsResponse = await axios.get(`http://10.142.46.1:3001/api/posts/${id}/comments`);
+                const commentsResponse = await axios.get(`${API_URL}/api/posts/${id}/comments`);
                 setComments(commentsResponse.data);
             } catch (error) {
                 setError('게시글을 불러오는데 실패했습니다.');
@@ -35,7 +36,7 @@ function PostDetailPage() {
         if (!window.confirm('정말로 삭제하시겠습니까?')) return;
 
         try {
-            await axios.delete(`http://10.142.46.1:3001/api/posts/${id}`, {
+            await axios.delete(`${API_URL}/api/posts/${id}`, {
                 data: { author_id: userId }
             });
             navigate('/board');
@@ -49,7 +50,7 @@ function PostDetailPage() {
         if (!newComment.trim()) return;
 
         try {
-            const response = await axios.post(`http://10.142.46.1:3001/api/posts/${id}/comments`, {
+            const response = await axios.post(`${API_URL}/api/posts/${id}/comments`, {
                 content: newComment,
                 author_id: userId,
                 author_name: userName
@@ -66,7 +67,7 @@ function PostDetailPage() {
         if (!window.confirm('댓글을 삭제하시겠습니까?')) return;
 
         try {
-            await axios.delete(`http://10.142.46.1:3001/api/comments/${commentId}`, {
+            await axios.delete(`${API_URL}/api/comments/${commentId}`, {
                 data: { author_id: userId }
             });
             setComments(comments.filter(comment => comment.id !== commentId));

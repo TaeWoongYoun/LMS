@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Prism from 'prismjs';
+import { API_URL } from '../config/config';
 
 function MainPage() {
     // 기본 상태
@@ -69,7 +70,7 @@ function MainPage() {
             if (filters.module) queryParams.append('module', filters.module);
             if (filters.search) queryParams.append('search', filters.search);
 
-            const url = `http://10.142.46.1:3001/api/modules${
+            const url = `${API_URL}/api/modules${
                 queryParams.toString() ? `?${queryParams.toString()}` : ''
             }`;
 
@@ -85,7 +86,7 @@ function MainPage() {
 
     const fetchCompletedAssignments = async (userId) => {
         try {
-            const response = await fetch(`http://10.142.46.1:3001/api/completed-assignments/${userId}`);
+            const response = await fetch(`${API_URL}/api/completed-assignments/${userId}`);
             const data = await response.json();
             setCompletedAssignments(data.map(item => item.assignment_name));
         } catch (error) {
@@ -95,7 +96,7 @@ function MainPage() {
 
     const fetchSubmittedAssignments = async (userId) => {
         try {
-            const response = await fetch(`http://10.142.46.1:3001/api/submissions/user/${userId}`);
+            const response = await fetch(`${API_URL}/api/submissions/user/${userId}`);
             if (!response.ok) throw new Error('제출된 과제 조회 실패');
             
             const data = await response.json();
@@ -225,7 +226,7 @@ function MainPage() {
         }
     
         try {
-            const response = await fetch('http://10.142.46.1:3001/api/submit', {
+            const response = await fetch(`${API_URL}:3001/api/submit`, {
                 method: 'POST',
                 body: formData,
             });
@@ -257,7 +258,7 @@ function MainPage() {
         }
     
         try {
-            await axios.post('http://10.142.46.1:3001/api/project-url', {
+            await axios.post(`${API_URL}/api/project-url`, {
                 userId,  // userName 대신 userId 사용
                 assignmentName: selectedAssignment,
                 projectUrl,

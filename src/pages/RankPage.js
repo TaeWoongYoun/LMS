@@ -8,6 +8,7 @@ import platinumImg from '../assets/platinum.png';
 import diamondImg from '../assets/diamond.png';
 import seraphim from '../assets/seraphim.png'
 import { Navigate } from 'react-router-dom';
+import { API_URL } from '../config/config';
 
 function RankPage() {
     const [rankings, setRankings] = useState([]);
@@ -27,7 +28,7 @@ function RankPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const rankingsResponse = await axios.get('http://10.142.46.1:3001/api/rankings');
+                const rankingsResponse = await axios.get(`${API_URL}/api/rankings`);
                 setRankings(rankingsResponse.data);
                 
                 // userId로 현재 사용자 찾기

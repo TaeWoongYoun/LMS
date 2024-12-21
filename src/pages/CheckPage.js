@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import './styles/CheckPage.css';
+import { API_URL } from '../config/config';
 
 const CheckPage = () => {
     const [submissions, setSubmissions] = useState([]);
@@ -20,7 +21,7 @@ const CheckPage = () => {
 
     const fetchSubmissions = async () => {
         try {
-            const response = await fetch('http://10.142.46.1:3001/api/submissions');
+            const response = await fetch(`${API_URL}/api/submissions`);
             const data = await response.json();
             setSubmissions(data);
         } catch (error) {
@@ -31,7 +32,7 @@ const CheckPage = () => {
     const handleCheck = async (submission) => {
         if (window.confirm('과제를 확인하셨습니까? 확인된 과제는 목록에서 삭제됩니다.')) {
             try {
-                const response = await fetch('http://10.142.46.1:3001/api/complete-assignment', {
+                const response = await fetch(`${API_URL}/api/complete-assignment`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ const CheckPage = () => {
                 <div className="modal-backdrop" onClick={() => setShowImageModal(false)}>
                     <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <img 
-                            src={`http://10.142.46.1:3001${selectedImage}`} 
+                            src={`${API_URL}${selectedImage}`} 
                             alt="Submission" 
                             className="modal-image"
                         />

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import './styles/BoardPage.css';
+import { API_URL } from '../config/config';
 
 function BoardPage() {
     const [posts, setPosts] = useState([]);
@@ -20,7 +21,7 @@ function BoardPage() {
     const fetchPosts = async () => {
         try {
             setIsLoading(true);
-            const response = await axios.get('http://10.142.46.1:3001/api/posts', {
+            const response = await axios.get(`${API_URL}/api/posts`, {
                 params: { 
                     category: category === 'all' ? null : category,
                     search 

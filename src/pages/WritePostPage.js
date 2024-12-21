@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './styles/WritePostPage.css';
+import { API_URL } from '../config/config';
 
 function WritePostPage() {
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ function WritePostPage() {
         }
  
         try {
-            await axios.post('http://10.142.46.1:3001/api/posts', {
+            await axios.post(`${API_URL}/api/posts`, {
                 category,
                 title,
                 content,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './styles/AuthStyle.css';
+import { API_URL } from '../config/config';
 
 function LoginPage() {
     const [id, setId] = useState('');
@@ -16,7 +17,7 @@ function LoginPage() {
         setSuccess('');
     
         try {
-            const response = await axios.post('http://10.142.46.1:3001/api/login', { 
+            const response = await axios.post(`${API_URL}/api/login`, { 
                 id, 
                 pw: password 
             }, {

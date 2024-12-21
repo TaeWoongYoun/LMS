@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './styles/AuthStyle.css';
+import { API_URL } from '../config/config';
 
 function JoinPage() {
     const [id, setId] = useState('');
@@ -34,7 +35,7 @@ function JoinPage() {
         }
     
         try {
-            const response = await axios.get(`http://10.142.46.1:3001/api/check-github/${githubId}`, {
+            const response = await axios.get(`${API_URL}/api/check-github/${githubId}`, {
                 headers: {
                     'Authorization': `token ${githubToken}`
                 }
@@ -64,7 +65,7 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://10.142.46.1:3001/api/check-id', { id });
+            const response = await axios.post(`${API_URL}/api/check-id`, { id });
             if (response.data.available) {
                 setSuccess('사용 가능한 아이디입니다.');
                 setError('');
@@ -137,7 +138,7 @@ function JoinPage() {
         }
 
         try {
-            const response = await axios.post('http://10.142.46.1:3001/api/register', { 
+            const response = await axios.post(`${API_URL}/api/register`, { 
                 id, 
                 pw: password, 
                 name,

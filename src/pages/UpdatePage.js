@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './styles/UpdatePage.css';
 import { Navigate } from 'react-router-dom';
+import { API_URL } from '../config/config';
 
 const UpdatePage = () => {
     const [activeTab, setActiveTab] = useState('info');
@@ -21,7 +22,7 @@ const UpdatePage = () => {
     useEffect(() => {
         const fetchUserInfo = async () => {
             try {
-                const response = await axios.get(`http://10.142.46.1:3001/api/user/${userId}`);
+                const response = await axios.get(`${API_URL}/api/user/${userId}`);
                 const { name, github_id, github_token } = response.data;
                 setUserInfo(prev => ({
                     ...prev,
@@ -63,7 +64,7 @@ const UpdatePage = () => {
         }
 
         try {
-            const response = await axios.get(`http://10.142.46.1:3001/api/check-github/${userInfo.githubId}`, {
+            const response = await axios.get(`${API_URL}/api/check-github/${userInfo.githubId}`, {
                 headers: {
                     'Authorization': `Bearer ${userInfo.githubToken}`
                 }
@@ -96,7 +97,7 @@ const UpdatePage = () => {
         }
 
         try {
-            await axios.put(`http://10.142.46.1:3001/api/user/${userId}`, {
+            await axios.put(`${API_URL}/api/user/${userId}`, {
                 name: userInfo.name,
                 githubId: userInfo.githubId,
                 githubToken: userInfo.githubToken
@@ -129,7 +130,7 @@ const UpdatePage = () => {
         }
 
         try {
-            await axios.put(`http://10.142.46.1:3001/api/user/${userId}/password`, {
+            await axios.put(`${API_URL}/api/user/${userId}/password`, {
                 currentPassword: userInfo.currentPassword,
                 newPassword: userInfo.newPassword
             });

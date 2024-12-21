@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './styles/UserPage.css';
 import { Navigate } from 'react-router-dom';
+import { API_URL } from '../config/config';
 
 const UserPage = () => {
     const [users, setUsers] = useState([]);
@@ -33,7 +34,7 @@ const UserPage = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch('http://10.142.46.1:3001/api/users');
+            const response = await fetch(`${API_URL}/api/users`);
             if (!response.ok) {
                 throw new Error('사용자 데이터 로딩에 실패했습니다.');
             }
@@ -54,7 +55,7 @@ const UserPage = () => {
         }
 
         try {
-            const response = await fetch(`http://10.142.46.1:3001/api/users/${idx}/role`, {
+            const response = await fetch(`${API_URL}/api/users/${idx}/role`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -89,7 +90,7 @@ const UserPage = () => {
         }
 
         try {
-            const response = await fetch(`http://10.142.46.1:3001/api/users/${idx}`, {
+            const response = await fetch(`${API_URL}/api/users/${idx}`, {
                 method: 'DELETE',
             });
 
