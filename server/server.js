@@ -648,6 +648,7 @@ app.get('/api/modules', async (req, res) => {
     }
 });
 
+// save-module API 수정
 app.post('/api/save-module', async (req, res) => {
     try {
         const { iframeData, files } = req.body;
@@ -656,14 +657,21 @@ app.post('/api/save-module', async (req, res) => {
             return res.status(400).json({ error: '잘못된 데이터 형식입니다.' });
         }
 
-        const folderName = iframeData.path.split('/').slice(-2)[0];
+        // 모듈명 대문자로 변환하여 처리
+        const moduleUpperCase = iframeData.module.toUpperCase();
+        const folderPath = iframeData.path.replace(
+            /\/(a|b)module\//i,
+            `/${moduleUpperCase}module/`
+        );
+
+        const folderName = folderPath.split('/').slice(-2)[0];
         if (!validateFileName(folderName)) {
             return res.status(400).json({
                 error: '폴더명은 영문자, 숫자, 하이픈, 언더스코어만 사용할 수 있습니다.'
             });
         }
 
-        const moduleDir = path.join('..', 'public', path.dirname(iframeData.path));
+        const moduleDir = path.join('..', 'public', path.dirname(folderPath));
 
         await ensureDirectoryExists(moduleDir);
 
@@ -675,12 +683,12 @@ app.post('/api/save-module', async (req, res) => {
 
         const [result] = await db.promise().query(
             'INSERT INTO iframe_data (level, module, name, description, path, title) VALUES (?, ?, ?, ?, ?, ?)',
-            [iframeData.level, iframeData.module, iframeData.name, iframeData.description, iframeData.path, iframeData.title]
+            [iframeData.level, moduleUpperCase, iframeData.name, iframeData.description, folderPath, iframeData.title]
         );
 
         res.status(200).json({
             message: '모듈이 성공적으로 저장되었습니다.',
-            path: iframeData.path,
+            path: folderPath,
             id: result.insertId
         });
     } catch (error) {
