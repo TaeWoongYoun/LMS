@@ -1,0 +1,94 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #1a1a1a;
+    font-family: Arial, sans-serif;
+    color: #ffffff;
+}
+
+.game-container {
+    text-align: center;
+    padding: 2rem;
+}
+
+.ai-response {
+    width: 250px;
+    height: 250px;
+    padding: 20px;
+    margin: 20px auto;
+    color: #fff;
+    background: linear-gradient(145deg, #374151, #1f2937);
+    box-shadow: 
+        0 0 20px rgba(0, 0, 0, 0.3),
+        inset 0 0 15px rgba(255, 255, 255, 0.1);
+    animation: venomTransform 4s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-response p {
+    margin: 0;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes venomTransform {
+    0% {
+        border-radius: 50% 60% 30% 80% / 60% 40% 70% 30%;
+        transform: scale(0.98);
+    }
+    20% {
+        border-radius: 60% 40% 30% 70% / 50% 60% 70% 40%;
+        transform: scale(1.05);
+    }
+    40% {
+        border-radius: 40% 80% 50% 90% / 80% 30% 60% 50%;
+        transform: scale(0.97);
+    }
+    60% {
+        border-radius: 70% 30% 90% 40% / 30% 80% 40% 70%;
+        transform: scale(1.03);
+    }
+    80% {
+        border-radius: 50% 60% 30% 80% / 60% 40% 70% 30%;
+        transform: scale(1.02);
+    }
+    100% {
+        border-radius: 50% 60% 30% 80% / 60% 40% 70% 30%;
+        transform: scale(0.98);
+    }
+}
+
+input {
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    margin: 10px;
+    width: 100px;
+    background: #2a2a2a;
+    color: #fff;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background: #4CAF50;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button:hover {
+    background: #45a049;
+}
