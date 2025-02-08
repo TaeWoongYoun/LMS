@@ -96,18 +96,6 @@
 ### 25일차
 - **경로 수정**: 오류가 나던 파일 저장 경로를 수정
 
-## 프로젝트 클론하기
-
-```bash
-git clone https://github.com/TaeWoongYoun/react-start.git
-cd react-start
-npm install
-npm start
-
-디렉토리 삭제:
-rmdir /s /q react-start
-```
-
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Prism.js](https://img.shields.io/badge/Prism.js-2E3A44?style=for-the-badge&logo=prism&logoColor=white)](https://prismjs.com/)
