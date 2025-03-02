@@ -96,6 +96,8 @@
 ### 25일차
 - **경로 수정**: 오류가 나던 파일 저장 경로를 수정
 
+### 임시중단
+
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Prism.js](https://img.shields.io/badge/Prism.js-2E3A44?style=for-the-badge&logo=prism&logoColor=white)](https://prismjs.com/)
