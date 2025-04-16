@@ -96,7 +96,9 @@
 ### 25일차
 - **경로 수정**: 오류가 나던 파일 저장 경로를 수정
 
-### 개발 임시중단
+### 4월 16일 임시 중단된 프로젝트 재시작(최성우 공동개발자 합류)
+### 26일차 
+- **서버 복구**: 기존에 구축헸던 서버가 학교 사정으로 사라지면서 중단했던 개발을 다시 서버컴퓨터를 찾으면서 복구
 
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
