@@ -100,6 +100,9 @@
 ### 26일차 
 - **서버 복구**: 기존에 구축헸던 서버가 학교 사정으로 사라지면서 중단했던 개발을 다시 서버컴퓨터를 찾으면서 복구
 
+### 5/15 
+- **서버 복구**: 비활성화된 서버 살리기
+
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Prism.js](https://img.shields.io/badge/Prism.js-2E3A44?style=for-the-badge&logo=prism&logoColor=white)](https://prismjs.com/)
