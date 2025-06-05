@@ -103,6 +103,8 @@
 ### 5/15 
 - **서버 복구**: 비활성화된 서버 살리기
 
+### 다시 실패
+
 ## 기술 스택
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Prism.js](https://img.shields.io/badge/Prism.js-2E3A44?style=for-the-badge&logo=prism&logoColor=white)](https://prismjs.com/)
